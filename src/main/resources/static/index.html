@@ -48,8 +48,77 @@
         </div>
         
         <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+            <!-- Menu Lateral (Sidebar) -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Controle de Acesso</span>
+                    </div>
+                    <button class="close-sidebar" id="closeSidebar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="cadastrar-pessoas">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Cadastrar Pessoas</span>
+                    </a>
+                </nav>
+                
+                <div class="sidebar-footer">
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name" id="sidebarUserName">David Alenor</span>
+                            <span class="user-role">Supervisor</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay para mobile -->
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+            <!-- Modal de Confirmação -->
+            <div class="modal-overlay" id="modalOverlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <div class="modal-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="modal-title" id="modalTitle">Cancelar Cadastro</h3>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <p class="modal-message" id="modalMessage">
+                            Deseja cancelar o cadastro? Todos os dados serão perdidos.
+                        </p>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="modal-btn modal-btn-secondary" id="modalCancel">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="modal-btn modal-btn-primary" id="modalConfirm">
+                            <i class="fas fa-check"></i> Confirmar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <header class="dashboard-header">
                 <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <div class="logo">
                         <i class="fas fa-shield-alt"></i>
                         <span>Controle de Acesso</span>
@@ -119,7 +188,97 @@
                 </div>
             </div>
             
-            <div class="dashboard-main">
+            <!-- Painel de Cadastro de Pessoas -->
+            <div class="cadastro-pessoas-panel" id="cadastroPessoasPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-user-plus"></i> Cadastrar Nova Pessoa</h2>
+                    <p class="panel-subtitle">Preencha os dados da pessoa para cadastro no sistema</p>
+                </div>
+                
+                <div class="cadastro-form-container">
+                    <form id="cadastroPessoaForm" class="cadastro-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome">
+                                    <i class="fas fa-user"></i> Nome Completo
+                                </label>
+                                <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cpf">
+                                    <i class="fas fa-id-card"></i> CPF
+                                </label>
+                                <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rg">
+                                    <i class="fas fa-address-card"></i> RG
+                                </label>
+                                <input type="text" id="rg" name="rg" placeholder="00.000.000-0" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dataNascimento">
+                                    <i class="fas fa-calendar-alt"></i> Data de Nascimento
+                                </label>
+                                <input type="date" id="dataNascimento" name="dataNascimento" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="funcao">
+                                    <i class="fas fa-briefcase"></i> Função
+                                </label>
+                                <select id="funcao" name="funcao" required>
+                                    <option value="">Selecione a função</option>
+                                    <option value="funcionario">Funcionário</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="gerente">Gerente</option>
+                                    <option value="diretor">Diretor</option>
+                                    <option value="terceirizado">Terceirizado</option>
+                                    <option value="visitante">Visitante</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="btnCancelar">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            
+                            <button type="button" class="btn-card" id="btnCadastrarCartao">
+                                <i class="fas fa-credit-card"></i> Cadastrar Cartão
+                            </button>
+                            
+                            <button type="submit" class="btn-primary" id="btnSalvar">
+                                <i class="fas fa-save"></i> Salvar Pessoa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="cadastro-info">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <h4>Informações Importantes</h4>
+                            <ul>
+                                <li>Todos os campos são obrigatórios</li>
+                                <li>O CPF deve ser válido e único no sistema</li>
+                                <li>Após salvar, use "Cadastrar Cartão" para vincular um cartão de acesso</li>
+                                <li>A função determina as permissões de acesso da pessoa</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-main" id="dashboardMain">
                 <div class="dashboard-section areas-section">
                     <div class="section-header">
                         <h3><i class="fas fa-building"></i> Áreas Restritas</h3>
