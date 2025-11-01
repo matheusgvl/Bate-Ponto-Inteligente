@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 
-CAMERA_SOURCE = 'http://192.168.0.2:4747/'
+CAMERA_SOURCE = 0
 
 OUTPUT_FILE = 'captured_test_frame.jpg'
 

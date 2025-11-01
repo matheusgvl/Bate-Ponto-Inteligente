@@ -6,6 +6,7 @@ import org.dibpt.patepontointeligenteweb.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,9 +18,14 @@ public class UserService {
     }
 
     public UUID createUser(CreateUserDTO createUserDTO) {
-        var entity = new User(Instant.now(), null, UUID.randomUUID(), createUserDTO.userName());
+        var entity = new User(createUserDTO.userName());
         var UserSaved = userRepository.save(entity);
 
         return UserSaved.getUserId();
+    }
+
+    public Optional<User> getUserById(String userId) {
+        var user = userRepository.findById(UUID.fromString(userId));
+        return user;
     }
 }
