@@ -2,6 +2,7 @@ package org.dibpt.patepontointeligenteweb.service;
 
 import org.dibpt.patepontointeligenteweb.Entity.User;
 import org.dibpt.patepontointeligenteweb.controller.CreateUserDTO;
+import org.dibpt.patepontointeligenteweb.controller.UpdateUserDTO;
 import org.dibpt.patepontointeligenteweb.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,17 @@ public class UserService {
 
     public List<User> getAllUsers(){
         return userRepository.findAll();
+    }
+
+    public void updateUserById(String userId, UpdateUserDTO updateUserDTO){
+        var id = UUID.fromString(userId);
+        var userExists = userRepository.existsById(id);
+        if(userExists){
+            var user = userRepository.findById(id).get();
+            user.setUserName(updateUserDTO.userName());
+            user.setUpdatedAt(Instant.now());
+            userRepository.save(user);
+        }
     }
 
     public void deleteUserById(String userId){
