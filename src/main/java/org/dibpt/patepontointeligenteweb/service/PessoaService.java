@@ -91,36 +91,43 @@ public class PessoaService {
     public long contarPorFuncao(String funcao) {
         return pessoaRepository.countByFuncaoAndAtivoTrue(funcao);
     }
-    
-    public Pessoa atualizarPessoa(Long id, Pessoa dadosAtualizados) throws Exception {
+
+    public Pessoa atualizarPessoa(Long id, AtualizarPessoaDTO dto) throws Exception {
         Optional<Pessoa> pessoaExistente = pessoaRepository.findById(id);
-        
+
         if (pessoaExistente.isEmpty()) {
             throw new Exception("Pessoa não encontrada");
         }
-        
+
         Pessoa pessoa = pessoaExistente.get();
-        
-        if (!pessoa.getCpf().equals(dadosAtualizados.getCpf())) {
-            if (pessoaRepository.existsByCpf(dadosAtualizados.getCpf())) {
+
+        String cpfLimpo = dto.cpf().replaceAll("[^\\d]", "");
+        if (!pessoa.getCpf().equals(cpfLimpo)) {
+            if (pessoaRepository.existsByCpf(cpfLimpo)) {
                 throw new Exception("CPF já cadastrado no sistema");
             }
         }
-        
-        if (dadosAtualizados.getCardUID() != null && 
-            !dadosAtualizados.getCardUID().equals(pessoa.getCardUID())) {
-            if (pessoaRepository.existsByCardUID(dadosAtualizados.getCardUID())) {
+
+        String cardUIDLimpo = (dto.cardUID() != null) ? dto.cardUID().trim() : null;
+        if (cardUIDLimpo != null && !cardUIDLimpo.isEmpty() &&
+                !cardUIDLimpo.equals(pessoa.getCardUID())) {
+            if (pessoaRepository.existsByCardUID(cardUIDLimpo)) {
                 throw new Exception("Cartão já cadastrado para outra pessoa");
             }
         }
-        
-        pessoa.setNome(dadosAtualizados.getNome());
-        pessoa.setCpf(dadosAtualizados.getCpf());
-        pessoa.setRg(dadosAtualizados.getRg());
-        pessoa.setDataNascimento(dadosAtualizados.getDataNascimento());
-        pessoa.setFuncao(dadosAtualizados.getFuncao());
-        pessoa.setCardUID(dadosAtualizados.getCardUID());
-        
+
+        LocalDate dataNascimento = null;
+        if (dto.dataNascimento() != null && !dto.dataNascimento().trim().isEmpty()) {
+            dataNascimento = LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+
+        pessoa.setNome(dto.nome().trim());
+        pessoa.setCpf(cpfLimpo);
+        pessoa.setRg(dto.rg() != null ? dto.rg().trim() : "");
+        pessoa.setDataNascimento(dataNascimento);
+        pessoa.setFuncao(dto.funcao() != null ? dto.funcao().trim() : "funcionario");
+        pessoa.setCardUID(cardUIDLimpo);
+
         return pessoaRepository.save(pessoa);
     }
     
