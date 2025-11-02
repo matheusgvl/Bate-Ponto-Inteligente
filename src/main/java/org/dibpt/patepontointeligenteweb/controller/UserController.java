@@ -1,5 +1,7 @@
 package org.dibpt.patepontointeligenteweb.controller;
 
+import org.dibpt.patepontointeligenteweb.DTO.CreateUserDTO;
+import org.dibpt.patepontointeligenteweb.DTO.UpdateUserDTO;
 import org.dibpt.patepontointeligenteweb.Entity.User;
 import org.dibpt.patepontointeligenteweb.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -7,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/users")

@@ -4,6 +4,9 @@ import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
+import org.dibpt.patepontointeligenteweb.DTO.AtualizarPessoaDTO;
+import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO
 
 import java.util.List;
 import java.util.Optional;
@@ -15,17 +18,9 @@ public class PessoaService {
     private PessoaRepository pessoaRepository;
     
     public Pessoa salvarPessoa(Pessoa pessoa) throws Exception {
-        if (pessoaRepository.existsByCpf(pessoa.getCpf())) {
-            throw new Exception("CPF já cadastrado no sistema");
-        }
+
         
-        if (pessoa.getCardUID() != null && !pessoa.getCardUID().isEmpty()) {
-            if (pessoaRepository.existsByCardUID(pessoa.getCardUID())) {
-                throw new Exception("Cartão já cadastrado para outra pessoa");
-            }
-        }
-        
-        return pessoaRepository.save(pessoa);
+        return null;
     }
     
     public Optional<Pessoa> buscarPorId(Long id) {
