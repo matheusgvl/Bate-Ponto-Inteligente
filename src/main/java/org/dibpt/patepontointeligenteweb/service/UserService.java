@@ -20,7 +20,10 @@ public class UserService {
     }
 
     public UUID createUser(CreateUserDTO createUserDTO) {
-        var entity = new User(createUserDTO.userName());
+        var entity = new User();
+        entity.setUserName(createUserDTO.userName());
+        entity.setCreatedAt(Instant.now());
+        entity.setUpdatedAt(Instant.now());
         var UserSaved = userRepository.save(entity);
 
         return UserSaved.getUserId();

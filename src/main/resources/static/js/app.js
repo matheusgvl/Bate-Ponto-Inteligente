@@ -125,9 +125,7 @@ function setupPersonForm() {
                         action: () => {
                             personForm.reset();
                             closeModal();
-                            // Voltar ao Dashboard após sucesso
                             showSection('dashboard');
-                            // Atualizar navegação ativa
                             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                             document.querySelector('.nav-item[data-section="dashboard"]').classList.add('active');
                         }
@@ -178,16 +176,24 @@ function setupPersonForm() {
     
     if (btnCadastrarCartao) {
         btnCadastrarCartao.addEventListener('click', function() {
-            showModal(
-                'Cadastrar Cartão',
-                'Funcionalidade de cadastro de cartão será implementada em breve.',
-                'fas fa-credit-card',
-                [{
-                    text: 'OK',
-                    class: 'modal-btn-primary',
-                    action: closeModal
-                }]
-            );
+            const nome = document.getElementById('nome').value.trim();
+            const cpf = document.getElementById('cpf').value.trim();
+            
+            if (!nome || !cpf) {
+                showModal(
+                    'Dados Incompletos',
+                    'Por favor, preencha pelo menos o nome e CPF antes de cadastrar o cartão.',
+                    'fas fa-exclamation-triangle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: closeModal
+                    }]
+                );
+                return;
+            }
+            
+            startCardReading();
         });
     }
 }
@@ -284,4 +290,194 @@ function logout() {
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
     document.getElementById('errorMessage').style.display = 'none';
+}
+
+function startCardReading() {
+    showModal(
+        'Aguardando Cartão NFC',
+        'Aproxime o cartão do leitor para cadastrar...',
+        'fas fa-credit-card',
+        [
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: () => {
+                    stopCardReading();
+                    closeModal();
+                }
+            }
+        ]
+    );
+    
+    const modalIcon = document.querySelector('.modal-icon i');
+    modalIcon.className = 'fas fa-credit-card';
+    modalIcon.parentElement.style.animation = 'modalPulse 1s infinite';
+    
+    readCardUID();
+}
+
+async function readCardUID() {
+    try {
+        console.log('Iniciando leitura do cartão NFC...');
+        
+        const response = await fetch('/api/card/read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('Resposta do servidor:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Dados recebidos:', data);
+            
+            if (data.success && data.uid) {
+                console.log('Cartão detectado com sucesso:', data.uid);
+                handleCardDetected(data.uid);
+            } else {
+                console.error('Erro na leitura:', data.error || 'Erro desconhecido');
+                showCardError(data.error || 'Erro ao ler cartão. Tente novamente.');
+            }
+        } else {
+            console.error('Erro HTTP:', response.status);
+            showCardError('Erro na comunicação com o leitor.');
+        }
+    } catch (error) {
+        console.error('Erro ao ler cartão:', error);
+        showCardError('Erro de conexão com o leitor.');
+    }
+}
+
+function handleCardDetected(uid) {
+    if (!uid.startsWith('63DF') && !uid.startsWith('A979') && 
+        !uid.startsWith('63df') && !uid.startsWith('a979')) {
+        showModal(
+            'Cartão Inválido',
+            `Cartão não reconhecido. UID: ${uid}\nApenas cartões com UID iniciado em 63DF ou A979 são aceitos.`,
+            'fas fa-exclamation-triangle',
+            [
+                {
+                    text: 'Tentar Novamente',
+                    class: 'modal-btn-primary',
+                    action: startCardReading
+                },
+                {
+                    text: 'Cancelar',
+                    class: 'modal-btn-secondary',
+                    action: closeModal
+                }
+            ]
+        );
+        return;
+    }
+    
+    showModal(
+        'Cartão Detectado!',
+        `UID do cartão: ${uid}\n\nDeseja cadastrar este cartão?`,
+        'fas fa-check-circle',
+        [
+            {
+                text: 'Não, tentar outro',
+                class: 'modal-btn-secondary',
+                action: startCardReading
+            },
+            {
+                text: 'Sim, cadastrar',
+                class: 'modal-btn-primary',
+                action: () => savePersonWithCard(uid)
+            }
+        ]
+    );
+}
+
+function savePersonWithCard(cardUID) {
+    const personForm = document.getElementById('cadastroPessoaForm');
+    const formData = new FormData(personForm);
+    const personData = {};
+    
+    for (let [key, value] of formData.entries()) {
+        personData[key] = value;
+    }
+    
+    personData.cardUID = cardUID;
+    
+    if (!validateCPF(personData.cpf)) {
+        showModal(
+            'CPF Inválido',
+            'Por favor, digite um CPF válido antes de cadastrar.',
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+        return;
+    }
+    
+    savePersonData(personData);
+}
+
+async function savePersonData(personData) {
+    try {
+        const response = await fetch('/api/person/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(personData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showModal(
+                'Sucesso!',
+                `Pessoa ${personData.nome} cadastrada com sucesso!\nCartão UID: ${personData.cardUID}`,
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        document.getElementById('cadastroPessoaForm').reset();
+                        closeModal();
+                        showSection('dashboard');
+                        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                        document.querySelector('.nav-item[data-section="dashboard"]').classList.add('active');
+                    }
+                }]
+            );
+        } else {
+            const error = await response.json();
+            showCardError(error.message || 'Erro ao salvar pessoa.');
+        }
+    } catch (error) {
+        console.error('Erro ao salvar pessoa:', error);
+        showCardError('Erro de conexão com o servidor.');
+    }
+}
+
+function showCardError(message) {
+    showModal(
+        'Erro no Cartão',
+        message,
+        'fas fa-exclamation-triangle',
+        [
+            {
+                text: 'Tentar Novamente',
+                class: 'modal-btn-primary',
+                action: startCardReading
+            },
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: closeModal
+            }
+        ]
+    );
+}
+
+function stopCardReading() {
+    fetch('/api/card/stop', { method: 'POST' }).catch(() => {});
 }
