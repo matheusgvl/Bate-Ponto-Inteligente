@@ -50,12 +50,7 @@ public class PessoaService {
             }
         }
         Pessoa pessoa = new Pessoa();
-        pessoa.setNome(dto.nome().trim());
-        pessoa.setCpf(cpfLimpo);
-        pessoa.setRg(dto.rg() != null ? dto.rg().trim() : "");
-        pessoa.setDataNascimento(dataNascimento);
-        pessoa.setFuncao(dto.funcao() != null ? dto.funcao().trim() : "funcionario");
-        pessoa.setCardUID(cardUIDLimpo);
+        mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
 
         return pessoaRepository.save(pessoa);
     }
@@ -121,14 +116,30 @@ public class PessoaService {
             dataNascimento = LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
         }
 
-        pessoa.setNome(dto.nome().trim());
-        pessoa.setCpf(cpfLimpo);
-        pessoa.setRg(dto.rg() != null ? dto.rg().trim() : "");
-        pessoa.setDataNascimento(dataNascimento);
-        pessoa.setFuncao(dto.funcao() != null ? dto.funcao().trim() : "funcionario");
-        pessoa.setCardUID(cardUIDLimpo);
+        mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
 
         return pessoaRepository.save(pessoa);
+    }
+    private void mapearDadosParaEntidade(Pessoa pessoa, String nome, String cpf, String rg,
+                                         String dataNascimentoStr, String funcao, String cardUID) throws Exception {
+
+        LocalDate dataNascimento = null;
+        if (dataNascimentoStr != null && !dataNascimentoStr.trim().isEmpty()) {
+            try {
+                dataNascimento = LocalDate.parse(dataNascimentoStr, DateTimeFormatter.ISO_LOCAL_DATE);
+            } catch (Exception e) {
+                throw new Exception("Data de nascimento inválida");
+            }
+        }
+
+        String cardUIDLimpo = (cardUID != null) ? cardUID.trim() : null;
+
+        pessoa.setNome(nome.trim());
+        pessoa.setCpf(cpf);
+        pessoa.setRg(rg != null ? rg.trim() : "");
+        pessoa.setDataNascimento(dataNascimento);
+        pessoa.setFuncao(funcao != null ? funcao.trim() : "funcionario");
+        pessoa.setCardUID(cardUIDLimpo);
     }
     
     public void desativarPessoa(Long id) throws Exception {
@@ -149,7 +160,6 @@ public class PessoaService {
             return false;
         }
         
-        // Calcular primeiro dígito verificador
         int soma = 0;
         for (int i = 0; i < 9; i++) {
             soma += Character.getNumericValue(cpf.charAt(i)) * (10 - i);

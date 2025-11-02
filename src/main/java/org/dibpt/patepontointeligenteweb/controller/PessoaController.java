@@ -43,7 +43,7 @@ public class PessoaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/list")
     public ResponseEntity<Map<String, Object>> listarPessoas() {
         Map<String, Object> response = new HashMap<>();
@@ -101,20 +101,21 @@ public class PessoaController {
     @GetMapping("/search/card/{uid}")
     public ResponseEntity<Map<String, Object>> buscarPorCartao(@PathVariable String uid) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             var pessoa = pessoaService.buscarPorCartao(uid);
-            
+
             if (pessoa.isPresent()) {
+                PessoaResponseDTO pessoaDto = new PessoaResponseDTO(pessoa.get());
                 response.put("success", true);
-                response.put("pessoa", pessoa.get());
+                response.put("pessoa", pessoaDto);
             } else {
                 response.put("success", false);
                 response.put("message", "Pessoa não encontrada para este cartão");
             }
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
