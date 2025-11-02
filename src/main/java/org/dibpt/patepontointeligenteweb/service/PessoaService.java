@@ -6,8 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.AtualizarPessoaDTO;
-import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,11 +17,47 @@ public class PessoaService {
     
     @Autowired
     private PessoaRepository pessoaRepository;
-    
-    public Pessoa salvarPessoa(Pessoa pessoa) throws Exception {
 
-        
-        return null;
+    public Pessoa salvarPessoa(SalvarPessoaDTO dto) throws Exception {
+        if (dto.nome() == null || dto.nome().trim().isEmpty()) {
+            throw new Exception("Nome é obrigatório");
+        }
+
+        if (dto.cpf() == null || dto.cpf().trim().isEmpty()) {
+            throw new Exception("CPF é obrigatório");
+        }
+
+        String cpfLimpo = dto.cpf().replaceAll("[^\\d]", "");
+        if (!validarCpf(cpfLimpo)) {
+            throw new Exception("CPF inválido");
+        }
+        LocalDate dataNascimento = null;
+        if (dto.dataNascimento() != null && !dto.dataNascimento().trim().isEmpty()) {
+            try {
+                dataNascimento = LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
+            } catch (Exception e) {
+                throw new Exception("Data de nascimento inválida");
+            }
+        }
+        if (pessoaRepository.existsByCpf(cpfLimpo)) {
+            throw new Exception("CPF já cadastrado no sistema");
+        }
+
+        String cardUIDLimpo = (dto.cardUID() != null) ? dto.cardUID().trim() : null;
+        if (cardUIDLimpo != null && !cardUIDLimpo.isEmpty()) {
+            if (pessoaRepository.existsByCardUID(cardUIDLimpo)) {
+                throw new Exception("Cartão já cadastrado para outra pessoa");
+            }
+        }
+        Pessoa pessoa = new Pessoa();
+        pessoa.setNome(dto.nome().trim());
+        pessoa.setCpf(cpfLimpo);
+        pessoa.setRg(dto.rg() != null ? dto.rg().trim() : "");
+        pessoa.setDataNascimento(dataNascimento);
+        pessoa.setFuncao(dto.funcao() != null ? dto.funcao().trim() : "funcionario");
+        pessoa.setCardUID(cardUIDLimpo);
+
+        return pessoaRepository.save(pessoa);
     }
     
     public Optional<Pessoa> buscarPorId(Long id) {
