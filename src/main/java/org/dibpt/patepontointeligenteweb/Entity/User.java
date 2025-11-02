@@ -24,6 +24,10 @@ public class User {
     @UpdateTimestamp
     private Instant updatedAt;
 
+    public User(String userName) {
+        this.userName = userName;
+    }
+
     public User(Instant createdAt, Instant updatedAt, UUID userId, String userName) {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
