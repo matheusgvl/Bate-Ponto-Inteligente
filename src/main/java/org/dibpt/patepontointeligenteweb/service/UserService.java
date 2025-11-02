@@ -3,6 +3,7 @@ package org.dibpt.patepontointeligenteweb.service;
 import org.dibpt.patepontointeligenteweb.Entity.User;
 import org.dibpt.patepontointeligenteweb.DTO.CreateUserDTO;
 import org.dibpt.patepontointeligenteweb.DTO.UpdateUserDTO;
+import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 import org.dibpt.patepontointeligenteweb.repository.UserRepository;
 import org.springframework.stereotype.Service;
 

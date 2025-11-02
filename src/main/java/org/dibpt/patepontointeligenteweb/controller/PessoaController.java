@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.dibpt.patepontointeligenteweb.DTO.AtualizarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
+import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 
 import java.net.URI;
 import java.util.stream.Collectors;
@@ -33,46 +34,23 @@ public class PessoaController {
 
     @GetMapping("/list")
     public ResponseEntity<List<PessoaResponseDTO>> listarPessoas() {
-        List<Pessoa> pessoas = pessoaService.listarPessoasAtivas();
-
-        List<PessoaResponseDTO> pessoasDto = pessoas.stream()
-                .map(PessoaResponseDTO::new)
-                .collect(Collectors.toList());
-
+        List<PessoaResponseDTO> pessoasDto = pessoaService.listarPessoasDTOs();
         return ResponseEntity.ok(pessoasDto);
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> obterEstatisticas() {
-        long totalPessoas = pessoaService.contarPessoasAtivas();
-        long funcionarios = pessoaService.contarPorFuncao("funcionario");
-        long supervisores = pessoaService.contarPorFuncao("supervisor");
-        long gerentes = pessoaService.contarPorFuncao("gerente");
-        long terceirizados = pessoaService.contarPorFuncao("terceirizado");
-
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalPessoas", totalPessoas);
-        stats.put("funcionarios", funcionarios);
-        stats.put("supervisores", supervisores);
-        stats.put("gerentes", gerentes);
-        stats.put("terceirizados", terceirizados);
-
+    public ResponseEntity<StatsResponseDTO> obterEstatisticas() {
+        StatsResponseDTO stats = pessoaService.obterEstatisticas();
         return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/search/card/{uid}")
     public ResponseEntity<PessoaResponseDTO> buscarPorCartao(@PathVariable String uid) throws Exception {
-        var pessoa = pessoaService.buscarPorCartao(uid)
-                .orElseThrow(() -> new Exception("Pessoa não encontrada para este cartão"));
-
-        PessoaResponseDTO pessoaDto = new PessoaResponseDTO(pessoa);
-        return ResponseEntity.ok(pessoaDto);
+        return ResponseEntity.ok(pessoaService.buscarDTOPorCartao(uid));
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<PessoaResponseDTO> atualizarPessoa(@PathVariable Long id, @RequestBody AtualizarPessoaDTO dto) throws Exception {
-        Pessoa pessoaAtualizada = pessoaService.atualizarPessoa(id, dto);
-        PessoaResponseDTO responseDto = new PessoaResponseDTO(pessoaAtualizada);
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(pessoaService.atualizarPessoa(id, dto));
     }
 }

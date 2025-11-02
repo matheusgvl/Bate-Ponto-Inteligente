@@ -1,5 +1,7 @@
 package org.dibpt.patepontointeligenteweb.service;
 
+import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
+import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PessoaService {
@@ -66,6 +69,12 @@ public class PessoaService {
     public Optional<Pessoa> buscarPorCartao(String cardUID) {
         return pessoaRepository.findByCardUID(cardUID);
     }
+
+    public PessoaResponseDTO buscarDTOPorCartao(String uid) throws Exception {
+        Pessoa pessoa = this.buscarPorCartao(uid)
+                .orElseThrow(() -> new Exception("Pessoa não encontrada para este cartão"));
+        return new PessoaResponseDTO(pessoa);
+    }
     
     public List<Pessoa> listarPessoasAtivas() {
         return pessoaRepository.findByAtivoTrue();
@@ -87,7 +96,7 @@ public class PessoaService {
         return pessoaRepository.countByFuncaoAndAtivoTrue(funcao);
     }
 
-    public Pessoa atualizarPessoa(Long id, AtualizarPessoaDTO dto) throws Exception {
+    public PessoaResponseDTO atualizarPessoa(Long id, AtualizarPessoaDTO dto) throws Exception {
         Optional<Pessoa> pessoaExistente = pessoaRepository.findById(id);
 
         if (pessoaExistente.isEmpty()) {
@@ -111,14 +120,9 @@ public class PessoaService {
             }
         }
 
-        LocalDate dataNascimento = null;
-        if (dto.dataNascimento() != null && !dto.dataNascimento().trim().isEmpty()) {
-            dataNascimento = LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
-        }
-
         mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
-
-        return pessoaRepository.save(pessoa);
+        Pessoa pessoaAtualizada = pessoaRepository.save(pessoa);
+        return new PessoaResponseDTO(pessoaAtualizada);
     }
     private void mapearDadosParaEntidade(Pessoa pessoa, String nome, String cpf, String rg,
                                          String dataNascimentoStr, String funcao, String cardUID) throws Exception {
@@ -151,6 +155,30 @@ public class PessoaService {
         Pessoa p = pessoa.get();
         p.setAtivo(false);
         pessoaRepository.save(p);
+    }
+
+    public StatsResponseDTO obterEstatisticas() {
+        long totalPessoas = this.contarPessoasAtivas(); //
+        long funcionarios = this.contarPorFuncao("funcionario"); //
+        long supervisores = this.contarPorFuncao("supervisor");
+        long gerentes = this.contarPorFuncao("gerente");
+        long terceirizados = this.contarPorFuncao("terceirizado");
+
+        return new StatsResponseDTO(
+                totalPessoas,
+                funcionarios,
+                supervisores,
+                gerentes,
+                terceirizados
+        );
+    }
+
+    public List<PessoaResponseDTO> listarPessoasDTOs() {
+        List<Pessoa> pessoas = this.listarPessoasAtivas(); //
+
+        return pessoas.stream()
+                .map(PessoaResponseDTO::new)
+                .collect(Collectors.toList());
     }
     
     public boolean validarCpf(String cpf) {
