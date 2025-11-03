@@ -1,5 +1,6 @@
 package org.dibpt.patepontointeligenteweb.repository;
 
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,8 +22,8 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     boolean existsByCardUID(String cardUID);
     
     List<Pessoa> findByAtivoTrue();
-    
-    List<Pessoa> findByFuncaoAndAtivoTrue(String funcao);
+
+    public List<Pessoa> findByFuncaoAndAtivoTrue(FuncaoPessoa funcao);
     
     @Query("SELECT p FROM Pessoa p WHERE LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%')) AND p.ativo = true")
     List<Pessoa> findByNomeContainingIgnoreCaseAndAtivoTrue(@Param("nome") String nome);
@@ -31,5 +32,5 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     long countPessoasAtivas();
     
     @Query("SELECT COUNT(p) FROM Pessoa p WHERE p.funcao = :funcao AND p.ativo = true")
-    long countByFuncaoAndAtivoTrue(@Param("funcao") String funcao);
+    long countByFuncaoAndAtivoTrue(@Param("funcao") FuncaoPessoa funcao);
 }
