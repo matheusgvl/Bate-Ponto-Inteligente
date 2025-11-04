@@ -1,13 +1,15 @@
 package org.dibpt.patepontointeligenteweb.service;
 
-import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
-import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
+import org.dibpt.patepontointeligenteweb.DTO.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
+import java.util.HashMap;
+
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
-import org.dibpt.patepontointeligenteweb.DTO.AtualizarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,12 +19,57 @@ import java.util.stream.Collectors;
 
 @Service
 public class PessoaService {
-    
-    @Autowired
-    private PessoaRepository pessoaRepository;
+
+    private final PessoaRepository pessoaRepository;
+    private final AcessoService acessoService;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    private AcessoService acessoService;
+    public PessoaService(PessoaRepository pessoaRepository,
+                         AcessoService acessoService,
+                         RestTemplate restTemplate) {
+        this.pessoaRepository = pessoaRepository;
+        this.acessoService = acessoService;
+        this.restTemplate = restTemplate;
+    }
+
+    public String iniciarCadastroRosto(Long id) throws RuntimeException {
+        Pessoa pessoa = this.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Pessoa não encontrada com ID: " + id));
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("id", pessoa.getId());
+        request.put("nome", pessoa.getNome());
+
+        String pythonApiUrl = "http://localhost:5000/register";
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(pythonApiUrl, request, String.class);
+            return response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao comunicar com o serviço de visão: " + e.getMessage());
+        }
+    }
+    public void salvarFace(SalvarFaceDTO dto) throws Exception {
+        Pessoa pessoa = pessoaRepository.findById(dto.id())
+                .orElseThrow(() -> new Exception("Pessoa não encontrada para o ID: " + dto.id()));
+
+        pessoa.setFaceEncoding(dto.encoding());
+        pessoaRepository.save(pessoa);
+    }
+
+    public List<Map<String, Object>> listarFacesParaPython() {
+        return pessoaRepository.findAll()
+                .stream()
+                .filter(pessoa -> pessoa.getFaceEncoding() != null && !pessoa.getFaceEncoding().isEmpty())
+                .map(pessoa -> {
+                    Map<String, Object> faceData = new HashMap<>();
+                    faceData.put("nome", pessoa.getNome());
+                    faceData.put("encoding", pessoa.getFaceEncoding());
+                    return faceData;
+                })
+                .collect(Collectors.toList());
+    }
 
     public Pessoa salvarPessoa(SalvarPessoaDTO dto) throws Exception {
         if (dto.nome() == null || dto.nome().trim().isEmpty()) {

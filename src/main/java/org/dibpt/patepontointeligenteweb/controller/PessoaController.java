@@ -3,12 +3,15 @@ package org.dibpt.patepontointeligenteweb.controller;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.service.PessoaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.dibpt.patepontointeligenteweb.DTO.AtualizarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
+import org.dibpt.patepontointeligenteweb.DTO.SalvarFaceDTO;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.stream.Collectors;
@@ -21,8 +24,14 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class PessoaController {
 
+    private final PessoaService pessoaService;
+    private final RestTemplate restTemplate;
+
     @Autowired
-    private PessoaService pessoaService;
+    public PessoaController(PessoaService pessoaService, RestTemplate restTemplate) {
+        this.pessoaService = pessoaService;
+        this.restTemplate = restTemplate;
+    }
 
     @PostMapping("/save")
     public ResponseEntity<PessoaResponseDTO> salvarPessoa(@RequestBody SalvarPessoaDTO dto) throws Exception {
@@ -52,5 +61,32 @@ public class PessoaController {
     @PutMapping("/update/{id}")
     public ResponseEntity<PessoaResponseDTO> atualizarPessoa(@PathVariable Long id, @RequestBody AtualizarPessoaDTO dto) throws Exception {
         return ResponseEntity.ok(pessoaService.atualizarPessoa(id, dto));
+    }
+
+    @PostMapping("/{id}/initiate-face-register")
+    public ResponseEntity<String> iniciarCadastroRosto(@PathVariable Long id) {
+        try {
+            String response = pessoaService.iniciarCadastroRosto(id);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/register-face")
+    public ResponseEntity<?> salvarFace(@RequestBody SalvarFaceDTO dto) {
+        try {
+            pessoaService.salvarFace(dto);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/faces")
+    public ResponseEntity<List<Map<String, Object>>> listarFaces() {
+        List<Map<String, Object>> faces = pessoaService.listarFacesParaPython();
+        return ResponseEntity.ok(faces);
     }
 }
