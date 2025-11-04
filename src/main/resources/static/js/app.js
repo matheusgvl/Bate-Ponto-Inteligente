@@ -42,6 +42,9 @@ function setupSidebar() {
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     const closeSidebar = document.getElementById('closeSidebar');
     const navItems = document.querySelectorAll('.nav-item');
+    const navSubitems = document.querySelectorAll('.nav-subitem');
+    const pessoaMenuItem = document.getElementById('pessoaMenuItem');
+    const pessoaSubmenu = document.getElementById('pessoaSubmenu');
     
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
@@ -58,12 +61,75 @@ function setupSidebar() {
     closeSidebar.addEventListener('click', closeSidebarMenu);
     sidebarOverlay.addEventListener('click', closeSidebarMenu);
     
+    // Toggle do menu dropdown de Pessoa
+    if (pessoaMenuItem) {
+        pessoaMenuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isActive = pessoaSubmenu.classList.contains('active');
+            pessoaSubmenu.classList.toggle('active');
+            pessoaMenuItem.classList.toggle('active');
+            
+            // Se o submenu foi aberto, não fecha o sidebar
+            if (!isActive) {
+                return false;
+            }
+        });
+    }
+    
+    // Navegação dos itens principais (sem dropdown)
     navItems.forEach(item => {
+        // Ignora o item pai do dropdown
+        if (item.id === 'pessoaMenuItem') {
+            return;
+        }
+        
         item.addEventListener('click', function(e) {
             e.preventDefault();
             
-            navItems.forEach(nav => nav.classList.remove('active'));
+            // Remove active de todos os itens e subitens
+            navItems.forEach(nav => {
+                if (nav.id !== 'pessoaMenuItem') {
+                    nav.classList.remove('active');
+                }
+            });
+            navSubitems.forEach(sub => sub.classList.remove('active'));
+            
+            // Fecha o submenu de Pessoa
+            pessoaSubmenu.classList.remove('active');
+            pessoaMenuItem.classList.remove('active');
+            
+            // Ativa o item clicado
             this.classList.add('active');
+            
+            const section = this.getAttribute('data-section');
+            showSection(section);
+            
+            closeSidebarMenu();
+        });
+    });
+    
+    // Navegação dos subitens do dropdown
+    navSubitems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active de todos os itens principais (exceto o pai)
+            navItems.forEach(nav => {
+                if (nav.id !== 'pessoaMenuItem') {
+                    nav.classList.remove('active');
+                }
+            });
+            
+            // Remove active de todos os subitens
+            navSubitems.forEach(sub => sub.classList.remove('active'));
+            
+            // Ativa o subitem clicado
+            this.classList.add('active');
+            
+            // Mantém o item pai ativo
+            pessoaMenuItem.classList.add('active');
             
             const section = this.getAttribute('data-section');
             showSection(section);
@@ -76,13 +142,23 @@ function setupSidebar() {
 function showSection(section) {
     const dashboardMain = document.getElementById('dashboardMain');
     const cadastroPessoasPanel = document.getElementById('cadastroPessoasPanel');
+    const listagemPessoasPanel = document.getElementById('listagemPessoasPanel');
     
+    // Esconde todas as seções
+    dashboardMain.style.display = 'none';
+    if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'none';
+    if (listagemPessoasPanel) listagemPessoasPanel.style.display = 'none';
+    
+    // Mostra a seção correspondente
     if (section === 'dashboard') {
         dashboardMain.style.display = 'grid';
-        if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'none';
     } else if (section === 'cadastrar-pessoas') {
-        dashboardMain.style.display = 'none';
         if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'block';
+    } else if (section === 'listar-pessoas') {
+        if (listagemPessoasPanel) {
+            listagemPessoasPanel.style.display = 'block';
+            carregarListaPessoas();
+        }
     }
 }
 
@@ -503,4 +579,231 @@ async function carregarEstatisticas() {
             }]
         );
     }
+}
+
+async function carregarListaPessoas() {
+    const pessoasGrid = document.getElementById('pessoasGrid');
+    
+    // Mostra estado de carregamento
+    pessoasGrid.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Carregando pessoas...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch('/api/person/list', {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar pessoas: ' + response.statusText);
+        }
+
+        const pessoas = await response.json();
+        console.log('Pessoas recebidas:', pessoas);
+        
+        if (pessoas.length === 0) {
+            pessoasGrid.innerHTML = `
+                <div class="empty-state-list">
+                    <i class="fas fa-users"></i>
+                    <h4>Nenhuma pessoa cadastrada</h4>
+                    <p>Cadastre a primeira pessoa no sistema</p>
+                </div>
+            `;
+            return;
+        }
+        
+        renderizarPessoas(pessoas);
+        
+    } catch (error) {
+        console.error('Erro ao carregar pessoas:', error);
+        pessoasGrid.innerHTML = `
+            <div class="empty-state-list">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>Erro ao carregar pessoas</h4>
+                <p>Não foi possível conectar ao servidor</p>
+            </div>
+        `;
+    }
+}
+
+function renderizarPessoas(pessoas) {
+    const pessoasGrid = document.getElementById('pessoasGrid');
+    const searchInput = document.getElementById('searchPessoa');
+    
+    // Função para renderizar
+    function render(listaPessoas) {
+        pessoasGrid.innerHTML = '';
+        
+        listaPessoas.forEach(pessoa => {
+            const iniciais = pessoa.nome.split(' ')
+                .map(n => n[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
+            
+            const funcaoFormatada = pessoa.funcao.charAt(0).toUpperCase() + 
+                                   pessoa.funcao.slice(1).toLowerCase();
+            
+            const card = document.createElement('div');
+            card.className = 'pessoa-card';
+            card.innerHTML = `
+                <div class="pessoa-card-header">
+                    <div class="pessoa-avatar">${iniciais}</div>
+                    <div class="pessoa-info">
+                        <div class="pessoa-nome">${pessoa.nome}</div>
+                        <span class="pessoa-funcao">${funcaoFormatada}</span>
+                    </div>
+                </div>
+                <div class="pessoa-card-body">
+                    <div class="pessoa-detail">
+                        <i class="fas fa-id-card"></i>
+                        <span>${pessoa.cpf}</span>
+                    </div>
+                    <div class="pessoa-detail">
+                        <i class="fas fa-address-card"></i>
+                        <span>RG: ${pessoa.rg}</span>
+                    </div>
+                    <div class="pessoa-detail">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${formatarData(pessoa.dataNascimento)}</span>
+                    </div>
+                    ${pessoa.cardUID ? `
+                        <div class="pessoa-detail">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Cartão: ${pessoa.cardUID}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="pessoa-card-footer">
+                    <div class="pessoa-status">
+                        <span class="status-dot"></span>
+                        <span>Ativo</span>
+                    </div>
+                    <div class="pessoa-actions">
+                        <button class="btn-icon" title="Editar" onclick="editarPessoa(${pessoa.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" title="Excluir" onclick="excluirPessoa(${pessoa.id}, '${pessoa.nome}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            pessoasGrid.appendChild(card);
+        });
+    }
+    
+    // Renderiza inicialmente todas as pessoas
+    render(pessoas);
+    
+    // Adiciona funcionalidade de busca
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const termo = this.value.toLowerCase().trim();
+            
+            if (termo === '') {
+                render(pessoas);
+                return;
+            }
+            
+            const pessoasFiltradas = pessoas.filter(pessoa => {
+                return pessoa.nome.toLowerCase().includes(termo) ||
+                       pessoa.cpf.includes(termo) ||
+                       pessoa.funcao.toLowerCase().includes(termo);
+            });
+            
+            if (pessoasFiltradas.length === 0) {
+                pessoasGrid.innerHTML = `
+                    <div class="empty-state-list">
+                        <i class="fas fa-search"></i>
+                        <h4>Nenhum resultado encontrado</h4>
+                        <p>Tente buscar com outros termos</p>
+                    </div>
+                `;
+            } else {
+                render(pessoasFiltradas);
+            }
+        });
+    }
+}
+
+function formatarData(dataString) {
+    const data = new Date(dataString + 'T00:00:00');
+    return data.toLocaleDateString('pt-BR');
+}
+
+function editarPessoa(id) {
+    showModal(
+        'Editar Pessoa',
+        'Funcionalidade em desenvolvimento.',
+        'fas fa-info-circle',
+        [{
+            text: 'OK',
+            class: 'modal-btn-primary',
+            action: closeModal
+        }]
+    );
+}
+
+function excluirPessoa(id, nome) {
+    showModal(
+        'Confirmar Exclusão',
+        `Tem certeza que deseja excluir ${nome}? Esta ação não pode ser desfeita.`,
+        'fas fa-exclamation-triangle',
+        [
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: closeModal
+            },
+            {
+                text: 'Excluir',
+                class: 'modal-btn-primary',
+                action: async () => {
+                    try {
+                        const response = await fetch(`/api/person/${id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            showModal(
+                                'Sucesso',
+                                `${nome} foi excluído com sucesso.`,
+                                'fas fa-check-circle',
+                                [{
+                                    text: 'OK',
+                                    class: 'modal-btn-primary',
+                                    action: () => {
+                                        closeModal();
+                                        carregarListaPessoas();
+                                        carregarEstatisticas();
+                                    }
+                                }]
+                            );
+                        } else {
+                            throw new Error('Erro ao excluir');
+                        }
+                    } catch (error) {
+                        showModal(
+                            'Erro',
+                            'Não foi possível excluir a pessoa.',
+                            'fas fa-exclamation-triangle',
+                            [{
+                                text: 'OK',
+                                class: 'modal-btn-primary',
+                                action: closeModal
+                            }]
+                        );
+                    }
+                }
+            }
+        ]
+    );
 }

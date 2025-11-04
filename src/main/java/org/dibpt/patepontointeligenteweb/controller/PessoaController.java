@@ -11,10 +11,7 @@ import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 
 import java.net.URI;
-import java.util.stream.Collectors;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/person")
@@ -52,5 +49,11 @@ public class PessoaController {
     @PutMapping("/update/{id}")
     public ResponseEntity<PessoaResponseDTO> atualizarPessoa(@PathVariable Long id, @RequestBody AtualizarPessoaDTO dto) throws Exception {
         return ResponseEntity.ok(pessoaService.atualizarPessoa(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluirPessoa(@PathVariable Long id) throws Exception {
+        pessoaService.excluirPessoa(id);
+        return ResponseEntity.noContent().build();
     }
 }
