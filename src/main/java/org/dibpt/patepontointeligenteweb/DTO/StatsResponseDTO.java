@@ -5,4 +5,7 @@ public record StatsResponseDTO(
         long funcionarios,
         long supervisores,
         long gerentes,
-        long terceirizados) { }
+        long terceirizados,
+        long acessosHoje,
+        long acessosNegados) {
+}

@@ -1,0 +1,10 @@
+package org.dibpt.patepontointeligenteweb.Entity.ENUM;
+
+public enum TipoAcesso {
+    PERMITIDO,
+    NEGADO_CARTAO_NAO_ENCONTRADO,
+    NEGADO_ROSTO_NAO_RECONHECIDO,
+    NEGADO_FALHA_DETECCAO_ROSTO,
+    NEGADO_PESSOA_INATIVA,
+    NEGADO_FALHA_LEITURA_CARTAO
+}

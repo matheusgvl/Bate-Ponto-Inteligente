@@ -471,7 +471,13 @@ function stopCardReading() {
 async function carregarEstatisticas() {
     console.log('Carregando estatísticas do dashboard...');
     try {
-        const response = await fetch('/api/person/stats'); //
+        const response = await fetch('/api/person/stats', {
+            method: 'GET',
+            cache: 'no-cache', // <-- A SOLUÇÃO
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
         if (!response.ok) {
             throw new Error('Falha ao buscar estatísticas: ' + response.statusText);
@@ -480,8 +486,8 @@ async function carregarEstatisticas() {
         const stats = await response.json();
         console.log('Estatísticas recebidas:', stats);
         document.getElementById('stat-pessoas-ativas').textContent = stats.totalPessoas;
-        document.getElementById('stat-acessos-hoje').textContent = 0;
-        document.getElementById('stat-acessos-negados').textContent = 0;
+        document.getElementById('stat-acessos-hoje').textContent = stats.acessosHoje;
+        document.getElementById('stat-acessos-negados').textContent = stats.acessosNegados;
         document.getElementById('stat-alertas-criticos').textContent = 0;
 
     } catch (error) {

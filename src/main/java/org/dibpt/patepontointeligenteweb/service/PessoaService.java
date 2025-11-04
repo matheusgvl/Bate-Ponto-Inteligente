@@ -21,6 +21,9 @@ public class PessoaService {
     @Autowired
     private PessoaRepository pessoaRepository;
 
+    @Autowired
+    private AcessoService acessoService;
+
     public Pessoa salvarPessoa(SalvarPessoaDTO dto) throws Exception {
         if (dto.nome() == null || dto.nome().trim().isEmpty()) {
             throw new Exception("Nome é obrigatório");
@@ -173,12 +176,17 @@ public class PessoaService {
         long gerentes = this.contarPorFuncao(FuncaoPessoa.GERENTE);
         long terceirizados = this.contarPorFuncao(FuncaoPessoa.TERCEIRIZADO);
 
+        long acessosHoje = acessoService.contarAcessosHoje();
+        long acessosNegados = acessoService.contarAcessosNegadosHoje();
+
         return new StatsResponseDTO(
                 totalPessoas,
                 funcionarios,
                 supervisores,
                 gerentes,
-                terceirizados
+                terceirizados,
+                acessosHoje,
+                acessosNegados
         );
     }
 
