@@ -19,15 +19,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class PessoaService {
-    
-    @Autowired
-    private PessoaRepository pessoaRepository;
+
+    private final PessoaRepository pessoaRepository;
+    private final AcessoService acessoService;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    private AcessoService acessoService;
-
-    @Autowired
-    private RestTemplate restTemplate;
+    public PessoaService(PessoaRepository pessoaRepository,
+                         AcessoService acessoService,
+                         RestTemplate restTemplate) {
+        this.pessoaRepository = pessoaRepository;
+        this.acessoService = acessoService;
+        this.restTemplate = restTemplate;
+    }
 
     public String iniciarCadastroRosto(Long id) throws RuntimeException {
         Pessoa pessoa = this.buscarPorId(id)
@@ -37,7 +41,7 @@ public class PessoaService {
         request.put("id", pessoa.getId());
         request.put("nome", pessoa.getNome());
 
-        String pythonApiUrl = "http://servico-python:5000";
+        String pythonApiUrl = "http://localhost:5000/register";
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(pythonApiUrl, request, String.class);

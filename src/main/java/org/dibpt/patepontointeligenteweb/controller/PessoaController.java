@@ -24,11 +24,14 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class PessoaController {
 
-    @Autowired
-    private PessoaService pessoaService;
+    private final PessoaService pessoaService;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    private RestTemplate restTemplate;
+    public PessoaController(PessoaService pessoaService, RestTemplate restTemplate) {
+        this.pessoaService = pessoaService;
+        this.restTemplate = restTemplate;
+    }
 
     @PostMapping("/save")
     public ResponseEntity<PessoaResponseDTO> salvarPessoa(@RequestBody SalvarPessoaDTO dto) throws Exception {
