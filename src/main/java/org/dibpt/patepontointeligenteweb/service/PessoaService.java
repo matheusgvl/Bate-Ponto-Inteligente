@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.AtualizarPessoaDTO;
-
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -20,6 +20,9 @@ public class PessoaService {
     
     @Autowired
     private PessoaRepository pessoaRepository;
+
+    @Autowired
+    private AcessoService acessoService;
 
     public Pessoa salvarPessoa(SalvarPessoaDTO dto) throws Exception {
         if (dto.nome() == null || dto.nome().trim().isEmpty()) {
@@ -83,8 +86,8 @@ public class PessoaService {
     public List<Pessoa> buscarPorNome(String nome) {
         return pessoaRepository.findByNomeContainingIgnoreCaseAndAtivoTrue(nome);
     }
-    
-    public List<Pessoa> buscarPorFuncao(String funcao) {
+
+    public List<Pessoa> buscarPorFuncao(FuncaoPessoa funcao) {
         return pessoaRepository.findByFuncaoAndAtivoTrue(funcao);
     }
     
@@ -92,7 +95,7 @@ public class PessoaService {
         return pessoaRepository.countPessoasAtivas();
     }
     
-    public long contarPorFuncao(String funcao) {
+    public long contarPorFuncao(FuncaoPessoa funcao) {
         return pessoaRepository.countByFuncaoAndAtivoTrue(funcao);
     }
 
@@ -142,7 +145,16 @@ public class PessoaService {
         pessoa.setCpf(cpf);
         pessoa.setRg(rg != null ? rg.trim() : "");
         pessoa.setDataNascimento(dataNascimento);
-        pessoa.setFuncao(funcao != null ? funcao.trim() : "funcionario");
+        String funcaoString = (funcao != null && !funcao.trim().isEmpty())
+                ? funcao.trim()
+                : "funcionario";
+        FuncaoPessoa funcaoEnum;
+        try {
+            funcaoEnum = FuncaoPessoa.valueOf(funcaoString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new Exception("Função inválida fornecida: " + funcaoString);
+        }
+        pessoa.setFuncao(funcaoEnum);
         pessoa.setCardUID(cardUIDLimpo);
     }
     
@@ -158,18 +170,23 @@ public class PessoaService {
     }
 
     public StatsResponseDTO obterEstatisticas() {
-        long totalPessoas = this.contarPessoasAtivas(); //
-        long funcionarios = this.contarPorFuncao("funcionario"); //
-        long supervisores = this.contarPorFuncao("supervisor");
-        long gerentes = this.contarPorFuncao("gerente");
-        long terceirizados = this.contarPorFuncao("terceirizado");
+        long totalPessoas = this.contarPessoasAtivas();
+        long funcionarios = this.contarPorFuncao(FuncaoPessoa.FUNCIONARIO);
+        long supervisores = this.contarPorFuncao(FuncaoPessoa.SUPERVISOR);
+        long gerentes = this.contarPorFuncao(FuncaoPessoa.GERENTE);
+        long terceirizados = this.contarPorFuncao(FuncaoPessoa.TERCEIRIZADO);
+
+        long acessosHoje = acessoService.contarAcessosHoje();
+        long acessosNegados = acessoService.contarAcessosNegadosHoje();
 
         return new StatsResponseDTO(
                 totalPessoas,
                 funcionarios,
                 supervisores,
                 gerentes,
-                terceirizados
+                terceirizados,
+                acessosHoje,
+                acessosNegados
         );
     }
 

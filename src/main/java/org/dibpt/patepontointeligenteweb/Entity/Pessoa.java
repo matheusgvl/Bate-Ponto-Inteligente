@@ -1,6 +1,9 @@
 package org.dibpt.patepontointeligenteweb.Entity;
 
 import jakarta.persistence.*;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -23,10 +26,11 @@ public class Pessoa {
     
     @Column(nullable = false)
     private LocalDate dataNascimento;
-    
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String funcao;
-    
+    private FuncaoPessoa funcao;
+
     @Column(unique = true, length = 20)
     private String cardUID;
     
@@ -40,7 +44,7 @@ public class Pessoa {
         this.dataCadastro = LocalDateTime.now();
     }
     
-    public Pessoa(String nome, String cpf, String rg, LocalDate dataNascimento, String funcao, String cardUID) {
+    public Pessoa(String nome, String cpf, String rg, LocalDate dataNascimento, FuncaoPessoa funcao, String cardUID) {
         this.nome = nome;
         this.cpf = cpf;
         this.rg = rg;
@@ -50,6 +54,9 @@ public class Pessoa {
         this.dataCadastro = LocalDateTime.now();
         this.ativo = true;
     }
+    public FuncaoPessoa getFuncao() {return funcao;}
+
+    public void setFuncao(FuncaoPessoa funcao) { this.funcao = funcao; }
     
     public Long getId() {
         return id;
@@ -90,15 +97,7 @@ public class Pessoa {
     public void setDataNascimento(LocalDate dataNascimento) {
         this.dataNascimento = dataNascimento;
     }
-    
-    public String getFuncao() {
-        return funcao;
-    }
-    
-    public void setFuncao(String funcao) {
-        this.funcao = funcao;
-    }
-    
+
     public String getCardUID() {
         return cardUID;
     }

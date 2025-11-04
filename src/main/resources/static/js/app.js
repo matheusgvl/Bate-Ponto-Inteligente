@@ -28,6 +28,7 @@ function setupLoginForm() {
             dashboardContainer.style.display = 'block';
             document.getElementById('sidebarUserName').textContent = 'David Alenor';
             errorMessage.style.display = 'none';
+            carregarEstatisticas();
         } else {
             errorMessage.textContent = 'Usuário ou senha incorretos!';
             errorMessage.style.display = 'block';
@@ -115,22 +116,7 @@ function setupPersonForm() {
             }
             
             if (validateCPF(personData.cpf)) {
-                showModal(
-                    'Sucesso!',
-                    `Pessoa ${personData.nome} cadastrada com sucesso!`,
-                    'fas fa-check-circle',
-                    [{
-                        text: 'OK',
-                        class: 'modal-btn-primary',
-                        action: () => {
-                            personForm.reset();
-                            closeModal();
-                            showSection('dashboard');
-                            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                            document.querySelector('.nav-item[data-section="dashboard"]').classList.add('active');
-                        }
-                    }]
-                );
+                savePersonData(personData);
             } else {
                 showModal(
                     'CPF Inválido',
@@ -480,4 +466,41 @@ function showCardError(message) {
 
 function stopCardReading() {
     fetch('/api/card/stop', { method: 'POST' }).catch(() => {});
+}
+
+async function carregarEstatisticas() {
+    console.log('Carregando estatísticas do dashboard...');
+    try {
+        const response = await fetch('/api/person/stats', {
+            method: 'GET',
+            cache: 'no-cache', // <-- A SOLUÇÃO
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar estatísticas: ' + response.statusText);
+        }
+
+        const stats = await response.json();
+        console.log('Estatísticas recebidas:', stats);
+        document.getElementById('stat-pessoas-ativas').textContent = stats.totalPessoas;
+        document.getElementById('stat-acessos-hoje').textContent = stats.acessosHoje;
+        document.getElementById('stat-acessos-negados').textContent = stats.acessosNegados;
+        document.getElementById('stat-alertas-criticos').textContent = 0;
+
+    } catch (error) {
+        console.error('Falha ao carregar estatísticas:', error);
+        showModal(
+            'Erro de Rede',
+            'Não foi possível carregar as estatísticas do dashboard. Tente mais tarde.',
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
 }

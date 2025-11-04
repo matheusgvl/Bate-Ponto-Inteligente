@@ -22,7 +22,7 @@ public record PessoaResponseDTO(
                 pessoa.getCpf(),
                 pessoa.getRg(),
                 pessoa.getDataNascimento(),
-                pessoa.getFuncao(),
+                pessoa.getFuncao().name().toLowerCase(),
                 pessoa.getCardUID(),
                 pessoa.getDataCadastro()
         );
