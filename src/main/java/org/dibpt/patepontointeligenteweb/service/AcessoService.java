@@ -19,12 +19,14 @@ import java.util.Optional;
 @Service
 public class AcessoService {
 
-    @Autowired
-    private AcessoRepository acessoRepository;
+    private final AcessoRepository acessoRepository;
+    private final PessoaRepository pessoaRepository;
 
     @Autowired
-    private PessoaRepository pessoaRepository; //
-
+    public AcessoService(AcessoRepository acessoRepository, PessoaRepository pessoaRepository) {
+        this.acessoRepository = acessoRepository;
+        this.pessoaRepository = pessoaRepository;
+    }
 
     public ResponseEntity<AcessoResponseDTO> registrarAcessoPorCartao(String cardUID) {
         if (cardUID == null || cardUID.trim().isEmpty()) {
@@ -43,11 +45,9 @@ public class AcessoService {
 
         Pessoa pessoa = pessoaOpt.get();
 
-        if (!pessoa.getAtivo()) { //
-            Acesso falha = new Acesso(TipoAcesso.NEGADO_PESSOA_INATIVA, pessoa);
-            acessoRepository.save(falha);
-            AcessoResponseDTO response = new AcessoResponseDTO("NEGADO", "Usuário inativo.", pessoa.getNome());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        Optional<ResponseEntity<AcessoResponseDTO>> inativoResponse = checkPessoaAtiva(pessoa);
+        if (inativoResponse.isPresent()) {
+            return inativoResponse.get();
         }
 
         Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO, pessoa);
@@ -76,6 +76,47 @@ public class AcessoService {
                 TipoAcesso.NEGADO_FALHA_DETECCAO_ROSTO
         );
 
-        return acessoRepository.countByTipoAcessoInAndDataHoraBetween(tiposNegados, inicioDoDia, fimDoDia); //
+        return acessoRepository.countByTipoAcessoInAndDataHoraBetween(tiposNegados, inicioDoDia, fimDoDia);
     }
+
+    public ResponseEntity<AcessoResponseDTO> registrarAcessoPorRosto(String nome) {
+        if (nome == null || nome.trim().isEmpty()) {
+            AcessoResponseDTO response = new AcessoResponseDTO("NEGADO", "Nome não fornecido.", null);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Optional<Pessoa> pessoaOpt = pessoaRepository.findByNome(nome.trim());
+
+        if (pessoaOpt.isEmpty()) {
+            Acesso falha = new Acesso(TipoAcesso.NEGADO_ROSTO_NAO_RECONHECIDO, null);
+            acessoRepository.save(falha);
+            AcessoResponseDTO response = new AcessoResponseDTO("NEGADO", "Rosto não cadastrado.", null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        Pessoa pessoa = pessoaOpt.get();
+
+        Optional<ResponseEntity<AcessoResponseDTO>> inativoResponse = checkPessoaAtiva(pessoa);
+        if (inativoResponse.isPresent()) {
+            return inativoResponse.get();
+        }
+
+        Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_ROSTO, pessoa); // Crie PERMITIDO_ROSTO no seu ENUM
+        acessoRepository.save(sucesso);
+        AcessoResponseDTO response = new AcessoResponseDTO("PERMITIDO", null, pessoa.getNome());
+        return ResponseEntity.ok(response);
+    }
+
+    private Optional<ResponseEntity<AcessoResponseDTO>> checkPessoaAtiva(Pessoa pessoa) {
+        if (!pessoa.getAtivo()) {
+            Acesso falha = new Acesso(TipoAcesso.NEGADO_PESSOA_INATIVA, pessoa);
+            acessoRepository.save(falha);
+            AcessoResponseDTO response = new AcessoResponseDTO("NEGADO", "Usuário inativo.", pessoa.getNome());
+            return Optional.of(ResponseEntity.status(HttpStatus.FORBIDDEN).body(response));
+        }
+        // Se a pessoa está ativa, não faz nada e retorna um Optional vazio
+        return Optional.empty();
+    }
+
+
 }

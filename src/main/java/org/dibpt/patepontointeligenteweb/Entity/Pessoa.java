@@ -39,6 +39,9 @@ public class Pessoa {
     
     @Column(nullable = false)
     private Boolean ativo = true;
+
+    @Column(name = "face_encoding", columnDefinition = "TEXT")
+    private String faceEncoding;
     
     public Pessoa() {
         this.dataCadastro = LocalDateTime.now();
@@ -120,6 +123,14 @@ public class Pessoa {
     
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public String getFaceEncoding() {
+        return faceEncoding;
+    }
+
+    public void setFaceEncoding(String faceEncoding) {
+        this.faceEncoding = faceEncoding;
     }
     
     @Override

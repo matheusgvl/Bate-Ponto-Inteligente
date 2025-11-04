@@ -21,4 +21,11 @@ public class AcessoController {
         String uid = requestBody.get("uid");
         return acessoService.registrarAcessoPorCartao(uid);
     }
+
+    @PostMapping("/registrar/rosto")
+    public ResponseEntity<AcessoResponseDTO> registrarAcessoRosto(@RequestBody Map<String, String> requestBody) {
+        String nome = requestBody.get("nome");
+        // Vamos criar este novo método no AcessoService
+        return acessoService.registrarAcessoPorRosto(nome);
+    }
 }
