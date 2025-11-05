@@ -55,14 +55,26 @@ public class Acesso {
     @JoinColumn(name = "pessoa_id", nullable = true)
     private Pessoa pessoa;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "local_id", nullable = false)
+    private Local local;
+
     public Acesso() {
         this.dataHora = LocalDateTime.now();
     }
 
-    public Acesso(TipoAcesso tipoAcesso, Pessoa pessoa) {
+    public Acesso(TipoAcesso tipoAcesso, Pessoa pessoa, Local local) {
         this.dataHora = LocalDateTime.now();
         this.tipoAcesso = tipoAcesso;
         this.pessoa = pessoa;
+        this.local = local;
+    }
+    public Local getLocal() {
+        return local;
+    }
+
+    public void setLocal(Local local) {
+        this.local = local;
     }
 
 }
