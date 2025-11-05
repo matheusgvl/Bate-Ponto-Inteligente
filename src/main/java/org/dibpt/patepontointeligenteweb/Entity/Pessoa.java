@@ -6,6 +6,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "pessoas")
@@ -42,7 +44,10 @@ public class Pessoa {
 
     @Column(name = "face_encoding", columnDefinition = "TEXT")
     private String faceEncoding;
-    
+
+    @ManyToMany(mappedBy = "pessoasAutorizadas", fetch = FetchType.LAZY)
+    private Set<Local> locaisAutorizados = new HashSet<>();
+
     public Pessoa() {
         this.dataCadastro = LocalDateTime.now();
     }
@@ -131,6 +136,14 @@ public class Pessoa {
 
     public void setFaceEncoding(String faceEncoding) {
         this.faceEncoding = faceEncoding;
+    }
+
+    public Set<Local> getLocaisAutorizados() {
+        return locaisAutorizados;
+    }
+
+    public void setLocaisAutorizados(Set<Local> locaisAutorizados) {
+        this.locaisAutorizados = locaisAutorizados;
     }
     
     @Override

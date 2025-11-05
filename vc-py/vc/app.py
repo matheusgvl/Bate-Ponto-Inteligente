@@ -5,10 +5,11 @@ import requests
 import threading
 import time
 import json
+import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
+LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
 known_face_names = []
 known_face_encodings = []
 
@@ -87,7 +88,11 @@ def video_processing_thread():
                     if name not in last_recognition_time or (now - last_recognition_time[name] > 60):
                         print(f"[RECONHECIMENTO] {name} detectado! Enviando para o Spring.")
                         try:
-                            requests.post(f"{SPRING_BOOT_API_URL}/acesso/registrar/rosto", json={"nome": name})
+                            payload = {
+                                "nome": name,
+                                "localId": LOCAL_ID
+                            }
+                            requests.post(f"{SPRING_BOOT_API_URL}/acesso/registrar/rosto", json=payload)
                             last_recognition_time[name] = now
                         except requests.exceptions.ConnectionError:
                             print(f"[ERRO] Falha ao enviar reconhecimento de {name} para o Spring.")
@@ -165,7 +170,7 @@ def health_check():
 
 
 if __name__ == "__main__":
-    print("[INIT] Iniciando serviço de visão computacional...")
+    print(f"[INIT] Iniciando serviço de visão computacional para o LOCAL_ID: {LOCAL_ID}")
     sync_faces_from_spring()
 
     print("[INIT] Iniciando thread da câmera...")
