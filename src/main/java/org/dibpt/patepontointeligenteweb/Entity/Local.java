@@ -33,6 +33,15 @@ public class Local {
     )
     private Set<Pessoa> pessoasAutorizadas = new HashSet<>();
 
+    @Column(name = "pending_auth_state", nullable = false)
+    private String pendingAuthenticationState = "IDLE";
+
+    @Column(name = "pending_user_id")
+    private Long pendingUserId;
+
+    @Column(name = "pending_auth_timestamp")
+    private LocalDateTime pendingAuthTimestamp;
+
     public Local() {
         this.dataCadastro = LocalDateTime.now();
     }
@@ -49,4 +58,10 @@ public class Local {
     public void setDataCadastro(LocalDateTime dataCadastro) { this.dataCadastro = dataCadastro; }
     public Set<Pessoa> getPessoasAutorizadas() { return pessoasAutorizadas; }
     public void setPessoasAutorizadas(Set<Pessoa> pessoasAutorizadas) { this.pessoasAutorizadas = pessoasAutorizadas; }
+    public String getPendingAuthenticationState() { return pendingAuthenticationState; }
+    public void setPendingAuthenticationState(String pendingAuthenticationState) { this.pendingAuthenticationState = pendingAuthenticationState; }
+    public Long getPendingUserId() { return pendingUserId; }
+    public void setPendingUserId(Long pendingUserId) { this.pendingUserId = pendingUserId; }
+    public LocalDateTime getPendingAuthTimestamp() { return pendingAuthTimestamp; }
+    public void setPendingAuthTimestamp(LocalDateTime pendingAuthTimestamp) { this.pendingAuthTimestamp = pendingAuthTimestamp; }
 }
