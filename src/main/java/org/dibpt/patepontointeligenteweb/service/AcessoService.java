@@ -1,5 +1,6 @@
 package org.dibpt.patepontointeligenteweb.service;
 
+import org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO;
 import org.dibpt.patepontointeligenteweb.Entity.Acesso;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.TipoAcesso;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AcessoService {
@@ -142,5 +144,12 @@ public class AcessoService {
             return Optional.of(ResponseEntity.status(HttpStatus.FORBIDDEN).body(response));
         }
         return Optional.empty();
+    }
+    public List<AcessoLogResponseDTO> listarHistoricoDeAcessos() {
+        List<Acesso> ultimosAcessos = acessoRepository.findTop50ByOrderByDataHoraDesc();
+
+        return ultimosAcessos.stream()
+                .map(AcessoLogResponseDTO::new)
+                .collect(Collectors.toList());
     }
 }
