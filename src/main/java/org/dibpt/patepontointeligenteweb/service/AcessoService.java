@@ -1,6 +1,5 @@
 package org.dibpt.patepontointeligenteweb.service;
 
-import org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO;
 import org.dibpt.patepontointeligenteweb.Entity.Acesso;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.TipoAcesso;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
@@ -17,7 +16,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class AcessoService {
@@ -39,7 +37,6 @@ public class AcessoService {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // 1. Busca o Local
         Optional<Local> localOpt = localRepository.findById(localId);
         if (localOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AcessoResponseDTO("NEGADO", "Local desconhecido.", null));
@@ -69,7 +66,7 @@ public class AcessoService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
-        Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO, pessoa, local);
+        Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_2FA, pessoa, local);
         acessoRepository.save(sucesso);
         AcessoResponseDTO response = new AcessoResponseDTO("PERMITIDO", null, pessoa.getNome());
         return ResponseEntity.ok(response);
@@ -130,7 +127,7 @@ public class AcessoService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
-        Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_ROSTO, pessoa, local);
+        Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_2FA, pessoa, local);
         acessoRepository.save(sucesso);
         AcessoResponseDTO response = new AcessoResponseDTO("PERMITIDO", null, pessoa.getNome());
         return ResponseEntity.ok(response);
@@ -145,11 +142,10 @@ public class AcessoService {
         }
         return Optional.empty();
     }
-    public List<AcessoLogResponseDTO> listarHistoricoDeAcessos() {
-        List<Acesso> ultimosAcessos = acessoRepository.findTop50ByOrderByDataHoraDesc();
-
-        return ultimosAcessos.stream()
-                .map(AcessoLogResponseDTO::new)
-                .collect(Collectors.toList());
+    public List<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO> listarHistoricoDeAcessos() {
+        return acessoRepository.findTop50ByOrderByDataHoraDesc()
+                .stream()
+                .map(org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

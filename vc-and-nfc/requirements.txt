@@ -4,3 +4,4 @@ numpy
 face_recognition
 Flask
 requests
+pyserial
