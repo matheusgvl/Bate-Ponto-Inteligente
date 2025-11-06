@@ -180,5 +180,5 @@ public class AcessoService {
                 .stream()
                 .map(org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO::new)
                 .collect(java.util.stream.Collectors.toList());
-    }
+    }//testando a branch para commit
 }
