@@ -30,6 +30,6 @@ public class AcessoController {
     public ResponseEntity<AcessoResponseDTO> registrarAcessoRosto(@RequestBody Map<String, Object> requestBody) {
         String nome = (String) requestBody.get("nome");
         Long localId = ((Number) requestBody.get("localId")).longValue();
-        return acessoService.registrarAcessoPorRosto(nome, localId); // MUDANÇA: Passar o localId
+        return acessoService.registrarAcessoPorRosto(nome, localId);
     }
 }
