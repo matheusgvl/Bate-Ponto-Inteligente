@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+import org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/acesso")
@@ -31,5 +33,10 @@ public class AcessoController {
         String nome = (String) requestBody.get("nome");
         Long localId = ((Number) requestBody.get("localId")).longValue();
         return acessoService.registrarAcessoPorRosto(nome, localId);
+    }
+
+    @GetMapping("/log")
+    public ResponseEntity<java.util.List<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO>> getAccessLog() {
+        return ResponseEntity.ok(acessoService.listarHistoricoDeAcessos());
     }
 }

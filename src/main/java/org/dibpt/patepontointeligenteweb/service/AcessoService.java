@@ -175,4 +175,10 @@ public class AcessoService {
         }
         return Optional.empty();
     }
+    public List<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO> listarHistoricoDeAcessos() {
+        return acessoRepository.findTop50ByOrderByDataHoraDesc()
+                .stream()
+                .map(org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO::new)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
