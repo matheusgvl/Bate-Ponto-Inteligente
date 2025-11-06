@@ -25,6 +25,15 @@ public class Local {
     @Column(nullable = false)
     private LocalDateTime dataCadastro;
 
+    @Column(name = "pending_auth_state", nullable = false)
+    private String pendingAuthenticationState = "IDLE";
+
+    @Column(name = "pending_auth_timestamp")
+    private LocalDateTime pendingAuthTimestamp;
+
+    @Column(name = "pending_user_id")
+    private Long pendingUserId;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "local_permissoes",
@@ -32,15 +41,6 @@ public class Local {
             inverseJoinColumns = @JoinColumn(name = "pessoa_id")
     )
     private Set<Pessoa> pessoasAutorizadas = new HashSet<>();
-
-    @Column(name = "pending_auth_state", nullable = false)
-    private String pendingAuthenticationState = "IDLE";
-
-    @Column(name = "pending_user_id")
-    private Long pendingUserId;
-
-    @Column(name = "pending_auth_timestamp")
-    private LocalDateTime pendingAuthTimestamp;
 
     public Local() {
         this.dataCadastro = LocalDateTime.now();
