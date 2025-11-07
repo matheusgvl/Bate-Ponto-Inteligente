@@ -12,6 +12,7 @@ import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarFaceDTO;
 import org.springframework.web.client.RestTemplate;
+import org.dibpt.patepontointeligenteweb.service.CardReaderService;
 
 import java.net.URI;
 import java.util.stream.Collectors;
