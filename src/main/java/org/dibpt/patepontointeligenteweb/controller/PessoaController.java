@@ -12,6 +12,7 @@ import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarFaceDTO;
 import org.springframework.web.client.RestTemplate;
+import org.dibpt.patepontointeligenteweb.service.CardReaderService;
 
 import java.net.URI;
 import java.util.stream.Collectors;
@@ -26,11 +27,13 @@ public class PessoaController {
 
     private final PessoaService pessoaService;
     private final RestTemplate restTemplate;
+    private final CardReaderService cardReaderService;
 
     @Autowired
-    public PessoaController(PessoaService pessoaService, RestTemplate restTemplate) {
+    public PessoaController(PessoaService pessoaService, RestTemplate restTemplate, CardReaderService cardReaderService) {
         this.pessoaService = pessoaService;
         this.restTemplate = restTemplate;
+        this.cardReaderService = cardReaderService;
     }
 
     @PostMapping("/save")
@@ -88,5 +91,23 @@ public class PessoaController {
     public ResponseEntity<List<Map<String, Object>>> listarFaces() {
         List<Map<String, Object>> faces = pessoaService.listarFacesParaPython();
         return ResponseEntity.ok(faces);
+    }
+    @PostMapping("/card/read")
+    public ResponseEntity<Map<String, Object>> lerCartaoParaCadastro() {
+        return ResponseEntity.ok(cardReaderService.iniciarLeitura());
+    }
+
+    @PostMapping("/card/stop")
+    public ResponseEntity<Map<String, Object>> cancelarLeituraCartao() {
+        return ResponseEntity.ok(cardReaderService.pararLeitura());
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> desativarPessoa(@PathVariable Long id) {
+        try {
+            pessoaService.desativarPessoa(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
