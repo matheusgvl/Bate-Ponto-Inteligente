@@ -101,4 +101,13 @@ public class PessoaController {
     public ResponseEntity<Map<String, Object>> cancelarLeituraCartao() {
         return ResponseEntity.ok(cardReaderService.pararLeitura());
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> desativarPessoa(@PathVariable Long id) {
+        try {
+            pessoaService.desativarPessoa(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

@@ -14,17 +14,22 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class CardReaderService {
 
-    private static final String PYTHON_SCRIPT_PATH = "arduino/leitor_serial_web.py";
+
+    private static final String PYTHON_EXECUTABLE = "C:\\Users\\isaac\\Downloads\\Projetos em Java\\Bate-Ponto-Inteligente\\vc-and-nfc\\.venv\\Scripts\\python.exe";
+    private static final String PYTHON_SCRIPT_PATH = "C:\\Users\\isaac\\Downloads\\Projetos em Java\\Bate-Ponto-Inteligente\\vc-and-nfc\\nfc\\leitor_serial_web.py";
+
     private Process currentProcess;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public Map<String, Object> iniciarLeitura() {
+
+    public synchronized Map<String, Object> iniciarLeitura() {
         Map<String, Object> response = new HashMap<>();
 
-        this.pararLeitura();
+
+        this.pararLeituraInterno();
 
         try {
-            ProcessBuilder pb = new ProcessBuilder("python", PYTHON_SCRIPT_PATH);
+            ProcessBuilder pb = new ProcessBuilder(PYTHON_EXECUTABLE, "-u", PYTHON_SCRIPT_PATH);
             pb.redirectErrorStream(true);
             currentProcess = pb.start();
 
@@ -36,25 +41,27 @@ public class CardReaderService {
             long startTime = System.currentTimeMillis();
             long timeout = 35000;
 
-            System.out.println("Serviço: Aguardando leitura do cartão NFC...");
+            System.out.println("Serviço: Iniciando leitura sincronizada...");
 
             while ((line = reader.readLine()) != null) {
 
                 if (System.currentTimeMillis() - startTime > timeout) {
-                    pararLeitura();
+                    System.out.println("Serviço: Timeout Java atingido.");
+                    pararLeituraInterno();
                     response.put("success", false);
                     response.put("error", "Tempo esgotado - nenhum cartão detectado");
                     return response;
                 }
 
-                if (line.trim().startsWith("{") && line.trim().endsWith("}")) {
+                String trimmedLine = line.trim();
+                if (trimmedLine.startsWith("{") && trimmedLine.endsWith("}")) {
                     try {
-                        JsonNode jsonNode = objectMapper.readTree(line);
+                        JsonNode jsonNode = objectMapper.readTree(trimmedLine);
 
                         if (jsonNode.has("success") && jsonNode.get("success").asBoolean()) {
                             if (jsonNode.has("uid")) {
                                 String uid = jsonNode.get("uid").asText().toUpperCase();
-                                pararLeitura();
+                                pararLeituraInterno();
                                 response.put("success", true);
                                 response.put("uid", uid);
                                 return response;
@@ -62,36 +69,38 @@ public class CardReaderService {
                         }
 
                         if (jsonNode.has("error")) {
-                            pararLeitura();
+                            pararLeituraInterno();
                             response.put("success", false);
                             response.put("error", jsonNode.get("error").asText());
                             return response;
                         }
-
-                    } catch (Exception ignored) {
-                    }
+                    } catch (Exception ignored) { }
                 }
             }
 
-            pararLeitura();
+            pararLeituraInterno();
             response.put("success", false);
-            response.put("error", "Leitor desconectado ou nenhum cartão válido detectado");
+            response.put("error", "Leitor desconectado ou processo finalizado.");
 
         } catch (IOException e) {
-            pararLeitura();
+            pararLeituraInterno();
             response.put("success", false);
-            response.put("error", "Erro interno ao executar script leitor: " + e.getMessage());
+            response.put("error", "Erro interno: " + e.getMessage());
         }
 
         return response;
     }
 
-    public Map<String, Object> pararLeitura() {
+    public synchronized Map<String, Object> pararLeitura() {
+        return pararLeituraInterno();
+    }
+
+    private Map<String, Object> pararLeituraInterno() {
         Map<String, Object> response = new HashMap<>();
         if (currentProcess != null && currentProcess.isAlive()) {
             currentProcess.destroy();
             try {
-                if (!currentProcess.waitFor(1, TimeUnit.SECONDS)) {
+                if (!currentProcess.waitFor(2, TimeUnit.SECONDS)) {
                     currentProcess.destroyForcibly();
                 }
             } catch (InterruptedException e) {
@@ -102,7 +111,7 @@ public class CardReaderService {
             response.put("message", "Leitura interrompida.");
         } else {
             response.put("success", false);
-            response.put("message", "Nenhuma leitura ativa para interromper.");
+            response.put("message", "Nenhuma leitura ativa.");
         }
         return response;
     }
