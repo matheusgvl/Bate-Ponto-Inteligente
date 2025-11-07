@@ -15,10 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import org.dibpt.patepontointeligenteweb.service.CardReaderService;
 
 import java.net.URI;
-import java.util.stream.Collectors;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/person")
