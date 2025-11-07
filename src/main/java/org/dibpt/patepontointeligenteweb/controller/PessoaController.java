@@ -102,12 +102,8 @@ public class PessoaController {
         return ResponseEntity.ok(cardReaderService.pararLeitura());
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> desativarPessoa(@PathVariable Long id) {
-        try {
-            pessoaService.desativarPessoa(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> excluirPessoa(@PathVariable Long id) throws Exception {
+        pessoaService.excluirPessoa(id);
+        return ResponseEntity.noContent().build();
     }
 }
