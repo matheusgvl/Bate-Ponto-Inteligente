@@ -1,0 +1,7 @@
+ultralytics
+opencv-python
+numpy
+face_recognition
+Flask
+requests
+pyserial

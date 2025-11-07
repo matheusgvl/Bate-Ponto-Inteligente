@@ -33,4 +33,6 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     
     @Query("SELECT COUNT(p) FROM Pessoa p WHERE p.funcao = :funcao AND p.ativo = true")
     long countByFuncaoAndAtivoTrue(@Param("funcao") FuncaoPessoa funcao);
+
+    Optional<Pessoa> findByNome(String nome);
 }
