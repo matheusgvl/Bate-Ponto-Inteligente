@@ -204,16 +204,14 @@ public class PessoaService {
         pessoa.setFuncao(funcaoEnum);
         pessoa.setCardUID(cardUIDLimpo);
     }
-    
-    public void desativarPessoa(Long id) throws Exception {
+
+    public void excluirPessoa(Long id) throws Exception {
         Optional<Pessoa> pessoa = pessoaRepository.findById(id);
         if (pessoa.isEmpty()) {
             throw new Exception("Pessoa não encontrada");
         }
-        
-        Pessoa p = pessoa.get();
-        p.setAtivo(false);
-        pessoaRepository.save(p);
+
+        pessoaRepository.deleteById(id);
     }
 
     public void excluirPessoa(Long id) throws Exception {

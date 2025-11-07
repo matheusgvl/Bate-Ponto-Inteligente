@@ -848,44 +848,44 @@ body {
     .menu-toggle {
         display: block;
     }
-    
+
     .dashboard-header {
         padding: 15px;
     }
-    
+
     .header-left {
         gap: 15px;
     }
-    
+
     .header-left .logo span {
         display: none;
     }
-    
+
     .current-time {
         display: none;
     }
-    
+
     .supervisor-info {
         gap: 10px;
     }
-    
+
     .supervisor-details {
         display: none;
     }
-    
+
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
     }
-    
+
     .stat-card {
         padding: 15px;
     }
-    
+
     .stat-number {
         font-size: 24px;
     }
-    
+
     .sidebar {
         width: 280px;
         left: -280px;
@@ -896,61 +896,61 @@ body {
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .login-card {
         min-width: auto;
         margin: 10px;
         padding: 30px 20px;
     }
-    
+
     .sidebar {
         width: 100%;
         left: -100%;
     }
-    
+
     .cadastro-form-container {
         padding: 25px 20px;
     }
-    
+
     .form-row:has(.form-group:nth-child(2)) {
         grid-template-columns: 1fr;
     }
-    
+
     .form-actions {
         flex-direction: column;
         align-items: center;
     }
-    
+
     .btn-primary,
     .btn-secondary,
     .btn-card {
         width: 100%;
         max-width: 300px;
     }
-    
+
     .info-box {
         flex-direction: column;
         gap: 15px;
         padding: 20px;
     }
-    
+
     .modal-container {
         min-width: auto;
         margin: 20px;
         max-width: 90%;
     }
-    
+
     .modal-header,
     .modal-body,
     .modal-actions {
         padding-left: 20px;
         padding-right: 20px;
     }
-    
+
     .modal-actions {
         flex-direction: column;
     }
-    
+
     .modal-btn {
         width: 100%;
     }
@@ -1308,37 +1308,37 @@ body {
     .dashboard-container {
         padding: 15px;
     }
-    
+
     .dashboard-header {
         flex-direction: column;
         gap: 15px;
         text-align: center;
     }
-    
+
     .header-left {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .dashboard-main {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .login-card {
         min-width: auto;
         padding: 30px;
         margin: 15px;
     }
-    
+
     .logo {
         font-size: 36px;
     }
-    
+
     .system-footer {
         flex-direction: column;
         gap: 10px;
