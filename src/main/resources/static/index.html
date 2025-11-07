@@ -59,16 +59,29 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                
+
                 <nav class="sidebar-nav">
                     <a href="#" class="nav-item active" data-section="dashboard">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="#" class="nav-item" data-section="cadastrar-pessoas">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Cadastrar Pessoas</span>
-                    </a>
+                    <div class="nav-item-dropdown">
+                        <a href="#" class="nav-item nav-item-parent" id="pessoaMenuItem">
+                            <i class="fas fa-users"></i>
+                            <span>Pessoa</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <div class="nav-submenu" id="pessoaSubmenu">
+                            <a href="#" class="nav-subitem" data-section="cadastrar-pessoas">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Cadastrar</span>
+                            </a>
+                            <a href="#" class="nav-subitem" data-section="listar-pessoas">
+                                <i class="fas fa-list"></i>
+                                <span>Listar</span>
+                            </a>
+                        </div>
+                    </div>
                 </nav>
                 
                 <div class="sidebar-footer">
@@ -273,6 +286,32 @@
                                 <li>Após salvar, use "Cadastrar Cartão" para vincular um cartão de acesso</li>
                                 <li>A função determina as permissões de acesso da pessoa</li>
                             </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="listagem-pessoas-panel" id="listagemPessoasPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-list"></i> Pessoas Cadastradas</h2>
+                    <p class="panel-subtitle">Visualize e gerencie todas as pessoas cadastradas no sistema</p>
+                </div>
+
+                <div class="listagem-container">
+                    <div class="listagem-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchPessoa" placeholder="Buscar por nome, CPF ou função...">
+                        </div>
+                        <button class="btn-primary" onclick="carregarListaPessoas()">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+
+                    <div class="pessoas-grid" id="pessoasGrid">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando pessoas...</p>
                         </div>
                     </div>
                 </div>
