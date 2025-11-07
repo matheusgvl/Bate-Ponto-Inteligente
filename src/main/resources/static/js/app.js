@@ -305,8 +305,8 @@ function startCardReading() {
 async function readCardUID() {
     try {
         console.log('Iniciando leitura do cartão NFC...');
-        
-        const response = await fetch('/api/card/read', {
+
+        const response = await fetch('/api/person/card/read', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -465,7 +465,7 @@ function showCardError(message) {
 }
 
 function stopCardReading() {
-    fetch('/api/card/stop', { method: 'POST' }).catch(() => {});
+    fetch('/api/person/card/stop', { method: 'POST' }).catch(() => {});
 }
 
 async function carregarEstatisticas() {
@@ -473,7 +473,7 @@ async function carregarEstatisticas() {
     try {
         const response = await fetch('/api/person/stats', {
             method: 'GET',
-            cache: 'no-cache', // <-- A SOLUÇÃO
+            cache: 'no-cache',
             headers: {
                 'Content-Type': 'application/json'
             }
