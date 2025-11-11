@@ -6,6 +6,7 @@ function initializeApp() {
     setupLoginForm();
     setupSidebar();
     setupPersonForm();
+    setupLocalForm();
     setupModal();
     updateTime();
     setInterval(updateTime, 1000);
@@ -45,6 +46,8 @@ function setupSidebar() {
     const navSubitems = document.querySelectorAll('.nav-subitem');
     const pessoaMenuItem = document.getElementById('pessoaMenuItem');
     const pessoaSubmenu = document.getElementById('pessoaSubmenu');
+    const localMenuItem = document.getElementById('localMenuItem');
+    const localSubmenu = document.getElementById('localSubmenu');
 
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
@@ -61,7 +64,6 @@ function setupSidebar() {
     closeSidebar.addEventListener('click', closeSidebarMenu);
     sidebarOverlay.addEventListener('click', closeSidebarMenu);
 
-    // Toggle do menu dropdown de Pessoa
     if (pessoaMenuItem) {
         pessoaMenuItem.addEventListener('click', function(e) {
             e.preventDefault();
@@ -71,68 +73,95 @@ function setupSidebar() {
             pessoaSubmenu.classList.toggle('active');
             pessoaMenuItem.classList.toggle('active');
 
-            // Se o submenu foi aberto, não fecha o sidebar
+            if (localSubmenu) {
+                localSubmenu.classList.remove('active');
+                localMenuItem.classList.remove('active');
+            }
+
             if (!isActive) {
                 return false;
             }
         });
     }
 
-    // Navegação dos itens principais (sem dropdown)
+    if (localMenuItem) {
+        localMenuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const isActive = localSubmenu.classList.contains('active');
+            localSubmenu.classList.toggle('active');
+            localMenuItem.classList.toggle('active');
+
+            if (pessoaSubmenu) {
+                pessoaSubmenu.classList.remove('active');
+                pessoaMenuItem.classList.remove('active');
+            }
+
+            if (!isActive) {
+                return false;
+            }
+        });
+    }
+
     navItems.forEach(item => {
-        // Ignora o item pai do dropdown
-        if (item.id === 'pessoaMenuItem') {
+        if (item.id === 'pessoaMenuItem' || item.id === 'localMenuItem') {
             return;
         }
 
         item.addEventListener('click', function(e) {
             e.preventDefault();
 
-            // Remove active de todos os itens e subitens
             navItems.forEach(nav => {
-                if (nav.id !== 'pessoaMenuItem') {
+                if (nav.id !== 'pessoaMenuItem' && nav.id !== 'localMenuItem') {
                     nav.classList.remove('active');
                 }
             });
             navSubitems.forEach(sub => sub.classList.remove('active'));
 
-            // Fecha o submenu de Pessoa
-            pessoaSubmenu.classList.remove('active');
-            pessoaMenuItem.classList.remove('active');
+            if (pessoaSubmenu) {
+                pessoaSubmenu.classList.remove('active');
+                pessoaMenuItem.classList.remove('active');
+            }
+            if (localSubmenu) {
+                localSubmenu.classList.remove('active');
+                localMenuItem.classList.remove('active');
+            }
 
-            // Ativa o item clicado
             this.classList.add('active');
 
-            const section = this.getAttribute('data-section');
-            showSection(section);
+            const sectionName = this.getAttribute('data-section');
+            showSection(sectionName);
 
             closeSidebarMenu();
         });
     });
 
-    // Navegação dos subitens do dropdown
     navSubitems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
 
-            // Remove active de todos os itens principais (exceto o pai)
             navItems.forEach(nav => {
-                if (nav.id !== 'pessoaMenuItem') {
+                if (nav.id !== 'pessoaMenuItem' && nav.id !== 'localMenuItem') {
                     nav.classList.remove('active');
                 }
             });
 
-            // Remove active de todos os subitens
             navSubitems.forEach(sub => sub.classList.remove('active'));
 
-            // Ativa o subitem clicado
             this.classList.add('active');
 
-            // Mantém o item pai ativo
-            pessoaMenuItem.classList.add('active');
+            const sectionType = this.getAttribute('data-section');
+            if (sectionType.includes('pessoas')) {
+                pessoaMenuItem.classList.add('active');
+                if (localMenuItem) localMenuItem.classList.remove('active');
+            } else if (sectionType.includes('local')) {
+                if (localMenuItem) localMenuItem.classList.add('active');
+                pessoaMenuItem.classList.remove('active');
+            }
 
-            const section = this.getAttribute('data-section');
-            showSection(section);
+            const sectionToShow = this.getAttribute('data-section');
+            showSection(sectionToShow);
 
             closeSidebarMenu();
         });
@@ -143,13 +172,17 @@ function showSection(section) {
     const dashboardMain = document.getElementById('dashboardMain');
     const cadastroPessoasPanel = document.getElementById('cadastroPessoasPanel');
     const listagemPessoasPanel = document.getElementById('listagemPessoasPanel');
+    const cadastroLocalPanel = document.getElementById('cadastroLocalPanel');
+    const listagemLocaisPanel = document.getElementById('listagemLocaisPanel');
+    const gerenciarAcessoLocalPanel = document.getElementById('gerenciarAcessoLocalPanel');
 
-    // Esconde todas as seções
     dashboardMain.style.display = 'none';
     if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'none';
     if (listagemPessoasPanel) listagemPessoasPanel.style.display = 'none';
+    if (cadastroLocalPanel) cadastroLocalPanel.style.display = 'none';
+    if (listagemLocaisPanel) listagemLocaisPanel.style.display = 'none';
+    if (gerenciarAcessoLocalPanel) gerenciarAcessoLocalPanel.style.display = 'none';
 
-    // Mostra a seção correspondente
     if (section === 'dashboard') {
         dashboardMain.style.display = 'grid';
     } else if (section === 'cadastrar-pessoas') {
@@ -158,6 +191,18 @@ function showSection(section) {
         if (listagemPessoasPanel) {
             listagemPessoasPanel.style.display = 'block';
             carregarListaPessoas();
+        }
+    } else if (section === 'cadastrar-local') {
+        if (cadastroLocalPanel) cadastroLocalPanel.style.display = 'block';
+    } else if (section === 'listar-locais') {
+        if (listagemLocaisPanel) {
+            listagemLocaisPanel.style.display = 'block';
+            carregarListaLocais();
+        }
+    } else if (section === 'gerenciar-acesso-local') {
+        if (gerenciarAcessoLocalPanel) {
+            gerenciarAcessoLocalPanel.style.display = 'block';
+            carregarOpcoesGerenciamento();
         }
     }
 }
@@ -549,7 +594,7 @@ async function carregarEstatisticas() {
     try {
         const response = await fetch('/api/person/stats', {
             method: 'GET',
-            cache: 'no-cache', // <-- A SOLUÇÃO
+            cache: 'no-cache',
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -584,7 +629,6 @@ async function carregarEstatisticas() {
 async function carregarListaPessoas() {
     const pessoasGrid = document.getElementById('pessoasGrid');
 
-    // Mostra estado de carregamento
     pessoasGrid.innerHTML = `
         <div class="loading-state">
             <i class="fas fa-spinner fa-spin"></i>
@@ -637,7 +681,6 @@ function renderizarPessoas(pessoas) {
     const pessoasGrid = document.getElementById('pessoasGrid');
     const searchInput = document.getElementById('searchPessoa');
 
-    // Função para renderizar
     function render(listaPessoas) {
         pessoasGrid.innerHTML = '';
 
@@ -700,10 +743,8 @@ function renderizarPessoas(pessoas) {
         });
     }
 
-    // Renderiza inicialmente todas as pessoas
     render(pessoas);
 
-    // Adiciona funcionalidade de busca
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             const termo = this.value.toLowerCase().trim();
@@ -805,5 +846,635 @@ function excluirPessoa(id, nome) {
                 }
             }
         ]
+    );
+}
+
+function setupLocalForm() {
+    const localForm = document.getElementById('cadastroLocalForm');
+    const btnCancelarLocal = document.getElementById('btnCancelarLocal');
+
+    if (localForm) {
+        localForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(localForm);
+            const localData = {};
+
+            for (let [key, value] of formData.entries()) {
+                localData[key] = value.trim();
+            }
+
+            if (localData.nome && localData.descricao && localData.nivelRestricao && localData.capacidadeMaxima) {
+                saveLocalData(localData);
+            } else {
+                showModal(
+                    'Dados Incompletos',
+                    'Por favor, preencha todos os campos obrigatórios.',
+                    'fas fa-exclamation-triangle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: closeModal
+                    }]
+                );
+            }
+        });
+    }
+
+    if (btnCancelarLocal) {
+        btnCancelarLocal.addEventListener('click', function() {
+            showModal(
+                'Cancelar Cadastro',
+                'Deseja cancelar o cadastro? Todos os dados serão perdidos.',
+                'fas fa-exclamation-triangle',
+                [
+                    {
+                        text: 'Continuar Editando',
+                        class: 'modal-btn-secondary',
+                        action: closeModal
+                    },
+                    {
+                        text: 'Cancelar Cadastro',
+                        class: 'modal-btn-primary',
+                        action: () => {
+                            document.getElementById('cadastroLocalForm').reset();
+                            closeModal();
+                            showSection('dashboard');
+                            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                            document.querySelector('.nav-item[data-section="dashboard"]').classList.add('active');
+                        }
+                    }
+                ]
+            );
+        });
+    }
+}
+
+async function saveLocalData(localData) {
+    try {
+        const response = await fetch('/api/local', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(localData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showModal(
+                'Sucesso!',
+                `Local "${localData.nome}" cadastrado com sucesso!`,
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        document.getElementById('cadastroLocalForm').reset();
+                        closeModal();
+                        showSection('dashboard');
+                        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                        document.querySelector('.nav-item[data-section="dashboard"]').classList.add('active');
+                    }
+                }]
+            );
+        } else {
+            const error = await response.json();
+            showModal(
+                'Erro ao Salvar',
+                error.message || 'Erro ao salvar o local.',
+                'fas fa-exclamation-triangle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        }
+    } catch (error) {
+        console.error('Erro ao salvar local:', error);
+        showModal(
+            'Erro de Conexão',
+            'Erro de conexão com o servidor.',
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
+}
+
+async function carregarListaLocais() {
+    const locaisGrid = document.getElementById('locaisGrid');
+
+    locaisGrid.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Carregando locais...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/local/list', {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar locais: ' + response.statusText);
+        }
+
+        const locais = await response.json();
+        console.log('Locais recebidos:', locais);
+
+        if (locais.length === 0) {
+            locaisGrid.innerHTML = `
+                <div class="empty-state-list">
+                    <i class="fas fa-building"></i>
+                    <h4>Nenhum local cadastrado</h4>
+                    <p>Cadastre o primeiro local no sistema</p>
+                </div>
+            `;
+            return;
+        }
+
+        renderizarLocais(locais);
+
+    } catch (error) {
+        console.error('Erro ao carregar locais:', error);
+        locaisGrid.innerHTML = `
+            <div class="empty-state-list">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>Erro ao carregar locais</h4>
+                <p>Não foi possível conectar ao servidor</p>
+            </div>
+        `;
+    }
+}
+
+function renderizarLocais(locais) {
+    const locaisGrid = document.getElementById('locaisGrid');
+    const searchInput = document.getElementById('searchLocal');
+
+    function render(listaLocais) {
+        locaisGrid.innerHTML = '';
+
+        listaLocais.forEach(local => {
+            const dataFormatada = new Date(local.dataCadastro).toLocaleDateString('pt-BR');
+            const nivelCor = {
+                'BAIXO': '#48bb78',
+                'MEDIO': '#ed8936', 
+                'ALTO': '#f56565'
+            }[local.nivelRestricao] || '#667eea';
+            
+            const localCard = document.createElement('div');
+            localCard.className = 'local-card';
+            localCard.innerHTML = `
+                <div class="local-header">
+                    <div class="local-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="local-info">
+                        <h3>${local.nome}</h3>
+                        <div class="local-status">
+                            <i class="fas fa-circle"></i>
+                            ${local.ativo ? 'Ativo' : 'Inativo'}
+                        </div>
+                    </div>
+                </div>
+                <div class="local-description">
+                    ${local.descricao}
+                </div>
+                <div class="local-details">
+                    <div class="local-detail-item">
+                        <span class="local-label">Nível de Restrição:</span>
+                        <span class="local-badge" style="background-color: ${nivelCor}20; border-color: ${nivelCor}40; color: ${nivelCor}">
+                            ${local.nivelRestricao}
+                        </span>
+                    </div>
+                    <div class="local-detail-item">
+                        <span class="local-label">Capacidade:</span>
+                        <span class="local-value">${local.capacidadeMaxima} pessoas</span>
+                    </div>
+                </div>
+                <div class="local-meta">
+                    <div class="local-date">
+                        <i class="fas fa-calendar"></i>
+                        ${dataFormatada}
+                    </div>
+                    <div class="local-actions">
+                        <button class="local-action-btn edit" onclick="editarLocal(${local.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="local-action-btn delete" onclick="excluirLocal(${local.id}, '${local.nome}')" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            locaisGrid.appendChild(localCard);
+        });
+    }
+
+    render(locais);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const termo = this.value.toLowerCase();
+            const locaisFiltrados = locais.filter(local =>
+                local.nome.toLowerCase().includes(termo) ||
+                local.descricao.toLowerCase().includes(termo)
+            );
+            render(locaisFiltrados);
+        });
+    }
+}
+
+function editarLocal(id) {
+    showModal(
+        'Editar Local',
+        'Funcionalidade em desenvolvimento.',
+        'fas fa-info-circle',
+        [{
+            text: 'OK',
+            class: 'modal-btn-primary',
+            action: closeModal
+        }]
+    );
+}
+
+function excluirLocal(id, nome) {
+    showModal(
+        'Confirmar Exclusão',
+        `Tem certeza que deseja excluir o local "${nome}"? Esta ação não pode ser desfeita.`,
+        'fas fa-exclamation-triangle',
+        [
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: closeModal
+            },
+            {
+                text: 'Excluir',
+                class: 'modal-btn-primary',
+                action: async () => {
+                    try {
+                        const response = await fetch(`/api/local/${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            showModal(
+                                'Sucesso',
+                                `Local "${nome}" foi excluído com sucesso.`,
+                                'fas fa-check-circle',
+                                [{
+                                    text: 'OK',
+                                    class: 'modal-btn-primary',
+                                    action: () => {
+                                        closeModal();
+                                        carregarListaLocais();
+                                    }
+                                }]
+                            );
+                        } else {
+                            throw new Error('Erro ao excluir');
+                        }
+                    } catch (error) {
+                        showModal(
+                            'Erro',
+                            'Não foi possível excluir o local.',
+                            'fas fa-exclamation-triangle',
+                            [{
+                                text: 'OK',
+                                class: 'modal-btn-primary',
+                                action: closeModal
+                            }]
+                        );
+                    }
+                }
+            }
+        ]
+    );
+}
+
+async function carregarOpcoesGerenciamento() {
+    await carregarLocaisParaSelect();
+    await carregarPessoasParaSelect();
+    setupGerenciarAcessoForm();
+    carregarAcessosVinculados();
+}
+
+async function carregarLocaisParaSelect() {
+    const localSelect = document.getElementById('localSelectGerenciar');
+    if (!localSelect) return;
+
+    localSelect.innerHTML = '<option value="">Carregando locais...</option>';
+
+    try {
+        const response = await fetch('/api/local/list', {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar locais');
+        }
+
+        const locais = await response.json();
+        
+        localSelect.innerHTML = '<option value="">Selecione um local</option>';
+        locais.forEach(local => {
+            const option = document.createElement('option');
+            option.value = local.id;
+            option.textContent = `${local.nome} - ${local.nivelRestricao}`;
+            localSelect.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error('Erro ao carregar locais:', error);
+        localSelect.innerHTML = '<option value="">Erro ao carregar locais</option>';
+    }
+}
+
+async function carregarPessoasParaSelect() {
+    const pessoaSelect = document.getElementById('pessoaSelectGerenciar');
+    if (!pessoaSelect) return;
+
+    pessoaSelect.innerHTML = '<option value="">Carregando pessoas...</option>';
+
+    try {
+        const response = await fetch('/api/person/list', {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar pessoas');
+        }
+
+        const pessoas = await response.json();
+        
+        pessoaSelect.innerHTML = '<option value="">Selecione uma pessoa</option>';
+        pessoas.forEach(pessoa => {
+            const option = document.createElement('option');
+            option.value = pessoa.id;
+            option.textContent = `${pessoa.nome} - ${pessoa.funcao}`;
+            pessoaSelect.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error('Erro ao carregar pessoas:', error);
+        pessoaSelect.innerHTML = '<option value="">Erro ao carregar pessoas</option>';
+    }
+}
+
+function setupGerenciarAcessoForm() {
+    const localSelect = document.getElementById('localSelectGerenciar');
+    const btnVincular = document.getElementById('btnVincularAcesso');
+    const btnRemover = document.getElementById('btnRemoverAcesso');
+
+    if (localSelect) {
+        localSelect.addEventListener('change', function() {
+            const localId = this.value;
+            if (localId) {
+                carregarAcessosDoLocal(localId);
+            } else {
+                limparListaAcessos();
+            }
+        });
+    }
+
+    if (btnVincular) {
+        btnVincular.addEventListener('click', vincularAcesso);
+    }
+
+    if (btnRemover) {
+        btnRemover.addEventListener('click', removerAcessoSelecionado);
+    }
+}
+
+async function carregarAcessosVinculados() {
+    const localSelect = document.getElementById('localSelectGerenciar');
+    if (localSelect && localSelect.value) {
+        await carregarAcessosDoLocal(localSelect.value);
+    } else {
+        limparListaAcessos();
+    }
+}
+
+async function carregarAcessosDoLocal(localId) {
+    const acessosList = document.getElementById('acessosVinculadosList');
+    if (!acessosList) return;
+
+    acessosList.innerHTML = `
+        <div class="loading-item">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Carregando acessos...</span>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`/api/local/${localId}/acessos`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar acessos');
+        }
+
+        const pessoas = await response.json();
+        renderizarAcessosVinculados(pessoas);
+
+    } catch (error) {
+        console.error('Erro ao carregar acessos:', error);
+        acessosList.innerHTML = `
+            <div class="error-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Erro ao carregar acessos</span>
+            </div>
+        `;
+    }
+}
+
+function renderizarAcessosVinculados(pessoas) {
+    const acessosList = document.getElementById('acessosVinculadosList');
+    if (!acessosList) return;
+
+    if (pessoas.length === 0) {
+        acessosList.innerHTML = `
+            <div class="empty-item">
+                <i class="fas fa-users"></i>
+                <span>Nenhuma pessoa vinculada a este local</span>
+            </div>
+        `;
+        return;
+    }
+
+    acessosList.innerHTML = '';
+    pessoas.forEach(pessoa => {
+        const item = document.createElement('div');
+        item.className = 'acesso-item';
+        item.innerHTML = `
+            <div class="acesso-info">
+                <div class="acesso-avatar">${pessoa.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}</div>
+                <div class="acesso-details">
+                    <span class="acesso-nome">${pessoa.nome}</span>
+                    <span class="acesso-funcao">${pessoa.funcao}</span>
+                </div>
+            </div>
+            <button class="acesso-remove-btn" onclick="removerAcesso(${pessoa.id})" title="Remover acesso">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        acessosList.appendChild(item);
+    });
+}
+
+function limparListaAcessos() {
+    const acessosList = document.getElementById('acessosVinculadosList');
+    if (acessosList) {
+        acessosList.innerHTML = `
+            <div class="empty-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Selecione um local para ver os acessos</span>
+            </div>
+        `;
+    }
+}
+
+async function vincularAcesso() {
+    const localSelect = document.getElementById('localSelectGerenciar');
+    const pessoaSelect = document.getElementById('pessoaSelectGerenciar');
+
+    const localId = localSelect?.value;
+    const pessoaId = pessoaSelect?.value;
+
+    if (!localId || !pessoaId) {
+        showModal(
+            'Seleção Incompleta',
+            'Por favor, selecione tanto o local quanto a pessoa.',
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/acesso/vincular', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                localId: parseInt(localId),
+                pessoaId: parseInt(pessoaId)
+            })
+        });
+
+        if (response.ok) {
+            showModal(
+                'Sucesso!',
+                'Acesso vinculado com sucesso!',
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        closeModal();
+                        pessoaSelect.value = '';
+                        carregarAcessosDoLocal(localId);
+                    }
+                }]
+            );
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Erro ao vincular acesso');
+        }
+
+    } catch (error) {
+        console.error('Erro ao vincular acesso:', error);
+        showModal(
+            'Erro',
+            'Não foi possível vincular o acesso: ' + error.message,
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
+}
+
+async function removerAcesso(pessoaId) {
+    const localSelect = document.getElementById('localSelectGerenciar');
+    const localId = localSelect?.value;
+
+    if (!localId) return;
+
+    try {
+        const response = await fetch('/api/acesso/desvincular', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                localId: parseInt(localId),
+                pessoaId: parseInt(pessoaId)
+            })
+        });
+
+        if (response.ok) {
+            carregarAcessosDoLocal(localId);
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Erro ao remover acesso');
+        }
+
+    } catch (error) {
+        console.error('Erro ao remover acesso:', error);
+        showModal(
+            'Erro',
+            'Não foi possível remover o acesso: ' + error.message,
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
+}
+
+function removerAcessoSelecionado() {
+    showModal(
+        'Informação',
+        'Para remover um acesso, clique no botão X ao lado da pessoa na lista.',
+        'fas fa-info-circle',
+        [{
+            text: 'OK',
+            class: 'modal-btn-primary',
+            action: closeModal
+        }]
     );
 }

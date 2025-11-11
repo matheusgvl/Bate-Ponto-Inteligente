@@ -148,4 +148,76 @@ public class AcessoService {
                 .map(org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO::new)
                 .collect(java.util.stream.Collectors.toList());
     }
+
+    public ResponseEntity<java.util.Map<String, String>> vincularPessoaAoLocal(Long pessoaId, Long localId) {
+        try {
+            Optional<Pessoa> pessoaOpt = pessoaRepository.findById(pessoaId);
+            Optional<Local> localOpt = localRepository.findById(localId);
+
+            if (pessoaOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Pessoa não encontrada"));
+            }
+
+            if (localOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Local não encontrado"));
+            }
+
+            Pessoa pessoa = pessoaOpt.get();
+            Local local = localOpt.get();
+
+            // Verificar se o acesso já existe
+            if (pessoa.getLocaisAutorizados().contains(local)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("message", "Pessoa já possui acesso a este local"));
+            }
+
+            // Adicionar o local à lista de locais permitidos da pessoa
+            pessoa.getLocaisAutorizados().add(local);
+            pessoaRepository.save(pessoa);
+
+            return ResponseEntity.ok(java.util.Map.of("message", "Acesso vinculado com sucesso"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(java.util.Map.of("message", "Erro interno do servidor: " + e.getMessage()));
+        }
+    }
+
+    public ResponseEntity<java.util.Map<String, String>> desvincularPessoaDoLocal(Long pessoaId, Long localId) {
+        try {
+            Optional<Pessoa> pessoaOpt = pessoaRepository.findById(pessoaId);
+            Optional<Local> localOpt = localRepository.findById(localId);
+
+            if (pessoaOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Pessoa não encontrada"));
+            }
+
+            if (localOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Local não encontrado"));
+            }
+
+            Pessoa pessoa = pessoaOpt.get();
+            Local local = localOpt.get();
+
+            // Verificar se o acesso existe
+            if (!pessoa.getLocaisAutorizados().contains(local)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Pessoa não possui acesso a este local"));
+            }
+
+            // Remover o local da lista de locais permitidos da pessoa
+            pessoa.getLocaisAutorizados().remove(local);
+            pessoaRepository.save(pessoa);
+
+            return ResponseEntity.ok(java.util.Map.of("message", "Acesso removido com sucesso"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(java.util.Map.of("message", "Erro interno do servidor: " + e.getMessage()));
+        }
+    }
 }

@@ -36,4 +36,18 @@ public class AcessoController {
     public ResponseEntity<java.util.List<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO>> getAccessLog() {
         return ResponseEntity.ok(acessoService.listarHistoricoDeAcessos());
     }
+
+    @PostMapping("/vincular")
+    public ResponseEntity<Map<String, String>> vincularAcesso(@RequestBody Map<String, Object> requestBody) {
+        Long localId = ((Number) requestBody.get("localId")).longValue();
+        Long pessoaId = ((Number) requestBody.get("pessoaId")).longValue();
+        return acessoService.vincularPessoaAoLocal(pessoaId, localId);
+    }
+
+    @DeleteMapping("/desvincular")
+    public ResponseEntity<Map<String, String>> desvincularAcesso(@RequestBody Map<String, Object> requestBody) {
+        Long localId = ((Number) requestBody.get("localId")).longValue();
+        Long pessoaId = ((Number) requestBody.get("pessoaId")).longValue();
+        return acessoService.desvincularPessoaDoLocal(pessoaId, localId);
+    }
 }

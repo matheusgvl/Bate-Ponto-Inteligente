@@ -64,6 +64,16 @@ public class LocalController {
     }
 
 
+    @GetMapping("/{id}/acessos")
+    public ResponseEntity<List<org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO>> listarPessoasAutorizadas(@PathVariable Long id) {
+        try {
+            List<org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO> pessoas = localService.listarPessoasAutorizadas(id);
+            return ResponseEntity.ok(pessoas);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/{localId}/permissoes/{pessoaId}")
     public ResponseEntity<Void> adicionarPermissao(@PathVariable Long localId, @PathVariable Long pessoaId) {
         try {

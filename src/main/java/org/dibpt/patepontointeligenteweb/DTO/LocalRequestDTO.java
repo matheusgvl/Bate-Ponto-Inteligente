@@ -2,5 +2,7 @@ package org.dibpt.patepontointeligenteweb.DTO;
 
 public record LocalRequestDTO(
         String nome,
-        String descricao
+        String descricao,
+        String nivelRestricao,
+        Integer capacidadeMaxima
 ) {}
