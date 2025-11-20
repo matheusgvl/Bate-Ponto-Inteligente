@@ -81,6 +81,27 @@
                             </a>
                         </div>
                     </div>
+                    <div class="nav-item-dropdown">
+                        <a href="#" class="nav-item nav-item-parent" id="localMenuItem">
+                            <i class="fas fa-building"></i>
+                            <span>Local</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <div class="nav-submenu" id="localSubmenu">
+                            <a href="#" class="nav-subitem" data-section="cadastrar-local">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Cadastrar</span>
+                            </a>
+                            <a href="#" class="nav-subitem" data-section="listar-locais">
+                                <i class="fas fa-list"></i>
+                                <span>Listar</span>
+                            </a>
+                            <a href="#" class="nav-subitem" data-section="gerenciar-acesso-local">
+                                <i class="fas fa-user-cog"></i>
+                                <span>Gerenciar Acesso</span>
+                            </a>
+                        </div>
+                    </div>
                 </nav>
                 
                 <div class="sidebar-footer">
@@ -311,7 +332,163 @@
                     </div>
                 </div>
             </div>
-            
+
+            <div class="cadastro-local-panel" id="cadastroLocalPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-plus-circle"></i> Cadastrar Novo Local</h2>
+                    <p class="panel-subtitle">Preencha os dados do local para cadastro no sistema</p>
+                </div>
+                
+                <div class="cadastro-form-container">
+                    <form id="cadastroLocalForm" class="cadastro-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nomeLocal">
+                                    <i class="fas fa-building"></i> Nome do Local
+                                </label>
+                                <input type="text" id="nomeLocal" name="nome" placeholder="Digite o nome do local" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="descricaoLocal">
+                                    <i class="fas fa-align-left"></i> Descrição
+                                </label>
+                                <textarea id="descricaoLocal" name="descricao" placeholder="Digite uma descrição para o local" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nivelRestricao">
+                                    <i class="fas fa-shield-alt"></i> Nível de Restrição
+                                </label>
+                                <select id="nivelRestricao" name="nivelRestricao" required>
+                                    <option value="">Selecione o nível</option>
+                                    <option value="BAIXO">Baixo</option>
+                                    <option value="MEDIO">Médio</option>
+                                    <option value="ALTO">Alto</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="capacidadeMaxima">
+                                    <i class="fas fa-users"></i> Capacidade Máxima
+                                </label>
+                                <input type="number" id="capacidadeMaxima" name="capacidadeMaxima" placeholder="Ex: 10" min="1" max="1000" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="btnCancelarLocal">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            
+                            <button type="submit" class="btn-primary" id="btnSalvarLocal">
+                                <i class="fas fa-save"></i> Salvar Local
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="cadastro-info">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <h4>Informações Importantes</h4>
+                            <ul>
+                                <li>Todos os campos são obrigatórios</li>
+                                <li>O nome deve ser único no sistema</li>
+                                <li>A descrição ajuda a identificar o local</li>
+                                <li>O nível de restrição define a segurança do acesso</li>
+                                <li>A capacidade máxima controla o limite de pessoas</li>
+                                <li>Após salvar, você pode gerenciar permissões de acesso</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="listagem-locais-panel" id="listagemLocaisPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-list"></i> Locais Cadastrados</h2>
+                    <p class="panel-subtitle">Visualize e gerencie todos os locais cadastrados no sistema</p>
+                </div>
+
+                <div class="listagem-container">
+                    <div class="listagem-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchLocal" placeholder="Buscar por nome ou descrição...">
+                        </div>
+                        <button class="btn-primary" onclick="carregarListaLocais()">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+                    
+                    <div class="locais-grid" id="locaisGrid">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando locais...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gerenciar-acesso-local-panel" id="gerenciarAcessoLocalPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-user-cog"></i> Gerenciar Acesso aos Locais</h2>
+                    <p class="panel-subtitle">Vincule pessoas aos locais para controlar acessos</p>
+                </div>
+
+                <div class="gerenciar-acesso-container">
+                    <div class="acesso-form-container">
+                        <form id="gerenciarAcessoForm" class="cadastro-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="localSelecionado">
+                                        <i class="fas fa-building"></i> Selecione o Local
+                                    </label>
+                                    <select id="localSelecionado" name="localId" required>
+                                        <option value="">Carregando locais...</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="pessoaSelecionada">
+                                        <i class="fas fa-user"></i> Selecione a Pessoa
+                                    </label>
+                                    <select id="pessoaSelecionada" name="pessoaId" required>
+                                        <option value="">Carregando pessoas...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" id="btnCancelarAcesso">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                
+                                <button type="submit" class="btn-primary" id="btnVincularAcesso">
+                                    <i class="fas fa-link"></i> Vincular Acesso
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="acessos-vinculados">
+                        <h3><i class="fas fa-list-ul"></i> Acessos Vinculados</h3>
+                        <div class="acessos-grid" id="acessosGrid">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Carregando acessos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="listagem-pessoas-panel" id="listagemPessoasPanel" style="display: none;">
                 <div class="panel-header">
                     <h2><i class="fas fa-list"></i> Pessoas Cadastradas</h2>

@@ -28,6 +28,8 @@ public class LocalService {
         Local local = new Local();
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
+        local.setNivelRestricao(dto.nivelRestricao());
+        local.setCapacidadeMaxima(dto.capacidadeMaxima());
         Local localSalvo = localRepository.save(local);
         return new LocalResponseDTO(localSalvo);
     }
@@ -38,6 +40,8 @@ public class LocalService {
 
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
+        local.setNivelRestricao(dto.nivelRestricao());
+        local.setCapacidadeMaxima(dto.capacidadeMaxima());
         Local localSalvo = localRepository.save(local);
         return new LocalResponseDTO(localSalvo);
     }
@@ -63,6 +67,16 @@ public class LocalService {
         localRepository.save(local);
     }
 
+
+    public List<org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO> listarPessoasAutorizadas(Long localId) throws Exception {
+        Local local = localRepository.findById(localId)
+                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + localId));
+        
+        return local.getPessoasAutorizadas()
+                .stream()
+                .map(org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO::new)
+                .collect(Collectors.toList());
+    }
 
     public void adicionarPermissao(Long localId, Long pessoaId) throws Exception {
         Local local = localRepository.findById(localId)
