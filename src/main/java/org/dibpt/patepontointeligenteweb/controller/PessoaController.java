@@ -2,7 +2,7 @@ package org.dibpt.patepontointeligenteweb.controller;
 
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.service.PessoaService;
-import org.hibernate.mapping.Map;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
