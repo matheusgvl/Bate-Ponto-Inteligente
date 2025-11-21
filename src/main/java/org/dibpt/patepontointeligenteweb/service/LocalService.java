@@ -2,6 +2,7 @@ package org.dibpt.patepontointeligenteweb.service;
 
 import org.dibpt.patepontointeligenteweb.DTO.LocalRequestDTO;
 import org.dibpt.patepontointeligenteweb.DTO.LocalResponseDTO;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
 import org.dibpt.patepontointeligenteweb.Entity.Local;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.repository.LocalRepository;
@@ -9,7 +10,9 @@ import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,8 +31,16 @@ public class LocalService {
         Local local = new Local();
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
-        local.setNivelRestricao(dto.nivelRestricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
+        if (dto.funcoesAutorizadas() != null) {
+            Set<FuncaoPessoa> funcoes = new HashSet<>();
+            for (String f : dto.funcoesAutorizadas()) {
+                try {
+                    funcoes.add(FuncaoPessoa.valueOf(f.toUpperCase()));
+                } catch (IllegalArgumentException ignored) {}
+            }
+            local.setFuncoesAutorizadas(funcoes);
+        }
         Local localSalvo = localRepository.save(local);
         return new LocalResponseDTO(localSalvo);
     }
@@ -40,8 +51,15 @@ public class LocalService {
 
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
-        local.setNivelRestricao(dto.nivelRestricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
+        if (dto.funcoesAutorizadas() != null) {
+            local.getFuncoesAutorizadas().clear();
+            for (String f : dto.funcoesAutorizadas()) {
+                try {
+                    local.getFuncoesAutorizadas().add(FuncaoPessoa.valueOf(f.toUpperCase()));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
         Local localSalvo = localRepository.save(local);
         return new LocalResponseDTO(localSalvo);
     }

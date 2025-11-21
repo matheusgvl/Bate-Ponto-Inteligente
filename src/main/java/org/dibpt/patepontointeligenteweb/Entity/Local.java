@@ -1,6 +1,8 @@
 package org.dibpt.patepontointeligenteweb.Entity;
 
 import jakarta.persistence.*;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,8 +24,6 @@ public class Local {
     @Column(nullable = false)
     private Boolean ativo = true;
 
-    @Column(name = "nivel_restricao", nullable = false)
-    private String nivelRestricao = "BAIXO";
 
     @Column(name = "capacidade_maxima")
     private Integer capacidadeMaxima;
@@ -39,6 +39,14 @@ public class Local {
 
     @Column(name = "pending_user_id")
     private Long pendingUserId;
+
+    @ElementCollection(targetClass = FuncaoPessoa.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "local_funcoes_autorizadas", joinColumns = @JoinColumn(name = "local_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "funcao")
+    private Set<FuncaoPessoa> funcoesAutorizadas = new HashSet<>();
+
+
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -58,8 +66,6 @@ public class Local {
     public void setNome(String nome) { this.nome = nome; }
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
-    public String getNivelRestricao() { return nivelRestricao; }
-    public void setNivelRestricao(String nivelRestricao) { this.nivelRestricao = nivelRestricao; }
     public Integer getCapacidadeMaxima() { return capacidadeMaxima; }
     public void setCapacidadeMaxima(Integer capacidadeMaxima) { this.capacidadeMaxima = capacidadeMaxima; }
     public Boolean getAtivo() { return ativo; }
@@ -74,4 +80,7 @@ public class Local {
     public void setPendingUserId(Long pendingUserId) { this.pendingUserId = pendingUserId; }
     public LocalDateTime getPendingAuthTimestamp() { return pendingAuthTimestamp; }
     public void setPendingAuthTimestamp(LocalDateTime pendingAuthTimestamp) { this.pendingAuthTimestamp = pendingAuthTimestamp; }
+    public Set<FuncaoPessoa> getFuncoesAutorizadas() {return funcoesAutorizadas;}
+
+    public void setFuncoesAutorizadas(Set<FuncaoPessoa> funcoesAutorizadas) {this.funcoesAutorizadas = funcoesAutorizadas;}
 }
