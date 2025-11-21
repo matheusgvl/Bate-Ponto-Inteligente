@@ -167,7 +167,10 @@ public class AcessoService {
                     .body(new AcessoResponseDTO("NEGADO", "Usuário inativo.", pessoa.getNome())));
         }
 
-        if (!local.getPessoasAutorizadas().contains(pessoa)) {
+        boolean cargoAutorizado = local.getFuncoesAutorizadas().contains(pessoa.getFuncao());
+        boolean pessoaAutorizada = local.getPessoasAutorizadas().contains(pessoa);
+
+        if (!cargoAutorizado && !pessoaAutorizada) {
             registrarFalha(pessoa, local, TipoAcesso.NEGADO_SEM_PERMISSAO_LOCAL);
             return Optional.of(ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new AcessoResponseDTO("NEGADO", "Acesso não autorizado para este local.", pessoa.getNome())));
