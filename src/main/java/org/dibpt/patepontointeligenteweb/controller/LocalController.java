@@ -2,9 +2,9 @@ package org.dibpt.patepontointeligenteweb.controller;
 
 import org.dibpt.patepontointeligenteweb.DTO.LocalRequestDTO;
 import org.dibpt.patepontointeligenteweb.DTO.LocalResponseDTO;
+import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
 import org.dibpt.patepontointeligenteweb.service.LocalService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,60 +37,34 @@ public class LocalController {
 
     @GetMapping("/{id}")
     public ResponseEntity<LocalResponseDTO> buscarLocalPorId(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(localService.buscarLocalPorId(id));
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(localService.buscarLocalPorId(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<LocalResponseDTO> atualizarLocal(@PathVariable Long id, @RequestBody LocalRequestDTO dto) {
-        try {
-            return ResponseEntity.ok(localService.atualizarLocal(id, dto));
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(localService.atualizarLocal(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> desativarLocal(@PathVariable Long id) {
-        try {
-            localService.desativarLocal(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        localService.desativarLocal(id);
+        return ResponseEntity.noContent().build();
     }
 
-
     @GetMapping("/{id}/acessos")
-    public ResponseEntity<List<org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO>> listarPessoasAutorizadas(@PathVariable Long id) {
-        try {
-            List<org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO> pessoas = localService.listarPessoasAutorizadas(id);
-            return ResponseEntity.ok(pessoas);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<List<PessoaResponseDTO>> listarPessoasAutorizadas(@PathVariable Long id) {
+        return ResponseEntity.ok(localService.listarPessoasAutorizadas(id));
     }
 
     @PostMapping("/{localId}/permissoes/{pessoaId}")
     public ResponseEntity<Void> adicionarPermissao(@PathVariable Long localId, @PathVariable Long pessoaId) {
-        try {
-            localService.adicionarPermissao(localId, pessoaId);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        localService.adicionarPermissao(localId, pessoaId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{localId}/permissoes/{pessoaId}")
     public ResponseEntity<Void> removerPermissao(@PathVariable Long localId, @PathVariable Long pessoaId) {
-        try {
-            localService.removerPermissao(localId, pessoaId);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        localService.removerPermissao(localId, pessoaId);
+        return ResponseEntity.noContent().build();
     }
 }

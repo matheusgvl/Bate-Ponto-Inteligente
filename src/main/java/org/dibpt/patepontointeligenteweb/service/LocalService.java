@@ -2,9 +2,11 @@ package org.dibpt.patepontointeligenteweb.service;
 
 import org.dibpt.patepontointeligenteweb.DTO.LocalRequestDTO;
 import org.dibpt.patepontointeligenteweb.DTO.LocalResponseDTO;
+import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
 import org.dibpt.patepontointeligenteweb.Entity.Local;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
+import org.dibpt.patepontointeligenteweb.exception.RegraNegocioException;
 import org.dibpt.patepontointeligenteweb.repository.LocalRepository;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,41 +34,31 @@ public class LocalService {
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
-        if (dto.funcoesAutorizadas() != null) {
-            Set<FuncaoPessoa> funcoes = new HashSet<>();
-            for (String f : dto.funcoesAutorizadas()) {
-                try {
-                    funcoes.add(FuncaoPessoa.valueOf(f.toUpperCase()));
-                } catch (IllegalArgumentException ignored) {}
-            }
-            local.setFuncoesAutorizadas(funcoes);
-        }
+        local.setFuncoesAutorizadas(converterFuncoes(dto.funcoesAutorizadas()));
+
         Local localSalvo = localRepository.save(local);
         return new LocalResponseDTO(localSalvo);
     }
 
-    public LocalResponseDTO atualizarLocal(Long id, LocalRequestDTO dto) throws Exception {
+    public LocalResponseDTO atualizarLocal(Long id, LocalRequestDTO dto) {
         Local local = localRepository.findById(id)
-                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado com ID: " + id));
 
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
+
         if (dto.funcoesAutorizadas() != null) {
-            local.getFuncoesAutorizadas().clear();
-            for (String f : dto.funcoesAutorizadas()) {
-                try {
-                    local.getFuncoesAutorizadas().add(FuncaoPessoa.valueOf(f.toUpperCase()));
-                } catch (IllegalArgumentException ignored) {}
-            }
+            local.setFuncoesAutorizadas(converterFuncoes(dto.funcoesAutorizadas()));
         }
+
         Local localSalvo = localRepository.save(local);
         return new LocalResponseDTO(localSalvo);
     }
 
-    public LocalResponseDTO buscarLocalPorId(Long id) throws Exception {
+    public LocalResponseDTO buscarLocalPorId(Long id) {
         Local local = localRepository.findById(id)
-                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado com ID: " + id));
         return new LocalResponseDTO(local);
     }
 
@@ -77,42 +69,53 @@ public class LocalService {
                 .collect(Collectors.toList());
     }
 
-    public void desativarLocal(Long id) throws Exception {
+    public void desativarLocal(Long id) {
         Local local = localRepository.findById(id)
-                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado com ID: " + id));
 
         local.setAtivo(false);
         localRepository.save(local);
     }
 
-
-    public List<org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO> listarPessoasAutorizadas(Long localId) throws Exception {
+    public List<PessoaResponseDTO> listarPessoasAutorizadas(Long localId) {
         Local local = localRepository.findById(localId)
-                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + localId));
-        
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado com ID: " + localId));
+
         return local.getPessoasAutorizadas()
                 .stream()
-                .map(org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO::new)
+                .map(PessoaResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
-    public void adicionarPermissao(Long localId, Long pessoaId) throws Exception {
+    public void adicionarPermissao(Long localId, Long pessoaId) {
         Local local = localRepository.findById(localId)
-                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + localId));
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado com ID: " + localId));
         Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                .orElseThrow(() -> new Exception("Pessoa não encontrada com ID: " + pessoaId));
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada com ID: " + pessoaId));
 
         local.getPessoasAutorizadas().add(pessoa);
         localRepository.save(local);
     }
 
-    public void removerPermissao(Long localId, Long pessoaId) throws Exception {
+    public void removerPermissao(Long localId, Long pessoaId) {
         Local local = localRepository.findById(localId)
-                .orElseThrow(() -> new Exception("Local não encontrado com ID: " + localId));
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado com ID: " + localId));
         Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                .orElseThrow(() -> new Exception("Pessoa não encontrada com ID: " + pessoaId));
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada com ID: " + pessoaId));
 
         local.getPessoasAutorizadas().remove(pessoa);
         localRepository.save(local);
+    }
+
+    private Set<FuncaoPessoa> converterFuncoes(List<String> funcoesNomes) {
+        if (funcoesNomes == null) return new HashSet<>();
+
+        Set<FuncaoPessoa> funcoesConvertidas = new HashSet<>();
+        for (String nome : funcoesNomes) {
+            try {
+                funcoesConvertidas.add(FuncaoPessoa.valueOf(nome.toUpperCase()));
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return funcoesConvertidas;
     }
 }

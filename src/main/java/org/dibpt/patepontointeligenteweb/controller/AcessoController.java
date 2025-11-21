@@ -1,10 +1,13 @@
 package org.dibpt.patepontointeligenteweb.controller;
 
+import org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.AcessoResponseDTO;
 import org.dibpt.patepontointeligenteweb.service.AcessoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,8 +35,9 @@ public class AcessoController {
         Long localId = ((Number) requestBody.get("localId")).longValue();
         return acessoService.registrarAcessoPorRosto(nome, localId);
     }
+
     @GetMapping("/log")
-    public ResponseEntity<java.util.List<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO>> getAccessLog() {
+    public ResponseEntity<List<AcessoLogResponseDTO>> getAccessLog() {
         return ResponseEntity.ok(acessoService.listarHistoricoDeAcessos());
     }
 

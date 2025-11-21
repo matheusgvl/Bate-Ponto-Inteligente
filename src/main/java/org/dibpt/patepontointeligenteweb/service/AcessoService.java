@@ -6,6 +6,7 @@ import org.dibpt.patepontointeligenteweb.Entity.Acesso;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.TipoAcesso;
 import org.dibpt.patepontointeligenteweb.Entity.Local;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
+import org.dibpt.patepontointeligenteweb.exception.RegraNegocioException;
 import org.dibpt.patepontointeligenteweb.repository.AcessoRepository;
 import org.dibpt.patepontointeligenteweb.repository.LocalRepository;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
@@ -44,11 +45,8 @@ public class AcessoService {
             return ResponseEntity.badRequest().body(new AcessoResponseDTO("NEGADO", "UID do cartão não fornecido.", null));
         }
 
-        Optional<Local> localOpt = localRepository.findById(localId);
-        if (localOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AcessoResponseDTO("NEGADO", "Local desconhecido.", null));
-        }
-        Local local = localOpt.get();
+        Local local = localRepository.findById(localId)
+                .orElseThrow(() -> new RegraNegocioException("Local desconhecido."));
 
         Optional<Pessoa> pessoaOpt = pessoaRepository.findByCardUID(cardUID.trim());
         if (pessoaOpt.isEmpty()) {
@@ -57,7 +55,6 @@ public class AcessoService {
         }
 
         Pessoa pessoa = pessoaOpt.get();
-
         Optional<ResponseEntity<AcessoResponseDTO>> erro = validarPessoaELocal(pessoa, local);
         if (erro.isPresent()) return erro.get();
 
@@ -74,11 +71,8 @@ public class AcessoService {
             return ResponseEntity.badRequest().body(new AcessoResponseDTO("NEGADO", "Nome não fornecido.", null));
         }
 
-        Optional<Local> localOpt = localRepository.findById(localId);
-        if (localOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AcessoResponseDTO("NEGADO", "Local desconhecido.", null));
-        }
-        Local local = localOpt.get();
+        Local local = localRepository.findById(localId)
+                .orElseThrow(() -> new RegraNegocioException("Local desconhecido."));
 
         Optional<Pessoa> pessoaOpt = pessoaRepository.findByNome(nome.trim());
         if (pessoaOpt.isEmpty()) {
@@ -115,48 +109,36 @@ public class AcessoService {
     }
 
     public ResponseEntity<Map<String, String>> vincularPessoaAoLocal(Long pessoaId, Long localId) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            Local local = localRepository.findById(localId)
-                    .orElseThrow(() -> new RuntimeException("Local não encontrado"));
-            Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                    .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
+        Local local = localRepository.findById(localId)
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado"));
+        Pessoa pessoa = pessoaRepository.findById(pessoaId)
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada"));
 
-            if (!local.getPessoasAutorizadas().contains(pessoa)) {
-                local.getPessoasAutorizadas().add(pessoa);
-                localRepository.save(local);
-                response.put("message", "Acesso vinculado com sucesso");
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("message", "Pessoa já possui acesso a este local");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-            }
-        } catch (Exception e) {
-            response.put("message", "Erro interno: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        if (!local.getPessoasAutorizadas().contains(pessoa)) {
+            local.getPessoasAutorizadas().add(pessoa);
+            localRepository.save(local);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Acesso vinculado com sucesso");
+            return ResponseEntity.ok(response);
+        } else {
+            throw new RegraNegocioException("Pessoa já possui acesso a este local");
         }
     }
 
     public ResponseEntity<Map<String, String>> desvincularPessoaDoLocal(Long pessoaId, Long localId) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            Local local = localRepository.findById(localId)
-                    .orElseThrow(() -> new RuntimeException("Local não encontrado"));
-            Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                    .orElseThrow(() -> new RuntimeException("Pessoa não encontrada"));
+        Local local = localRepository.findById(localId)
+                .orElseThrow(() -> new RegraNegocioException("Local não encontrado"));
+        Pessoa pessoa = pessoaRepository.findById(pessoaId)
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada"));
 
-            if (local.getPessoasAutorizadas().contains(pessoa)) {
-                local.getPessoasAutorizadas().remove(pessoa);
-                localRepository.save(local);
-                response.put("message", "Acesso removido com sucesso");
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("message", "Pessoa não possui acesso a este local");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
-        } catch (Exception e) {
-            response.put("message", "Erro interno: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        if (local.getPessoasAutorizadas().contains(pessoa)) {
+            local.getPessoasAutorizadas().remove(pessoa);
+            localRepository.save(local);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Acesso removido com sucesso");
+            return ResponseEntity.ok(response);
+        } else {
+            throw new RegraNegocioException("Pessoa não possui acesso a este local");
         }
     }
 

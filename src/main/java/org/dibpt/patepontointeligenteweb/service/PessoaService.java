@@ -1,20 +1,20 @@
 package org.dibpt.patepontointeligenteweb.service;
 
 import org.dibpt.patepontointeligenteweb.DTO.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
-import java.util.Map;
-import java.util.HashMap;
-
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+import org.dibpt.patepontointeligenteweb.exception.RegraNegocioException;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,17 +25,63 @@ public class PessoaService {
     private final RestTemplate restTemplate;
 
     @Autowired
-    public PessoaService(PessoaRepository pessoaRepository,
-                         AcessoService acessoService,
-                         RestTemplate restTemplate) {
+    public PessoaService(PessoaRepository pessoaRepository, AcessoService acessoService, RestTemplate restTemplate) {
         this.pessoaRepository = pessoaRepository;
         this.acessoService = acessoService;
         this.restTemplate = restTemplate;
     }
 
-    public String iniciarCadastroRosto(Long id) throws RuntimeException {
-        Pessoa pessoa = this.buscarPorId(id)
-                .orElseThrow(() -> new RuntimeException("Pessoa não encontrada com ID: " + id));
+    public Pessoa salvarPessoa(SalvarPessoaDTO dto) {
+        validarDadosObrigatorios(dto);
+
+        String cpfLimpo = dto.cpf().replaceAll("\\D", "");
+        if (!validarCpf(cpfLimpo)) {
+            throw new RegraNegocioException("CPF inválido");
+        }
+
+        if (pessoaRepository.existsByCpf(cpfLimpo)) {
+            throw new RegraNegocioException("CPF já cadastrado no sistema");
+        }
+
+        String cardUIDLimpo = (dto.cardUID() != null) ? dto.cardUID().trim() : null;
+        if (cardUIDLimpo != null && !cardUIDLimpo.isEmpty()) {
+            if (pessoaRepository.existsByCardUID(cardUIDLimpo)) {
+                throw new RegraNegocioException("Cartão já cadastrado para outra pessoa");
+            }
+        }
+
+        Pessoa pessoa = new Pessoa();
+        mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
+
+        return pessoaRepository.save(pessoa);
+    }
+
+    public PessoaResponseDTO atualizarPessoa(Long id, AtualizarPessoaDTO dto) {
+        Pessoa pessoa = pessoaRepository.findById(id)
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada"));
+
+        String cpfLimpo = dto.cpf().replaceAll("\\D", "");
+        if (!pessoa.getCpf().equals(cpfLimpo)) {
+            if (pessoaRepository.existsByCpf(cpfLimpo)) {
+                throw new RegraNegocioException("CPF já cadastrado no sistema");
+            }
+        }
+
+        String cardUIDLimpo = (dto.cardUID() != null) ? dto.cardUID().trim() : null;
+        if (cardUIDLimpo != null && !cardUIDLimpo.isEmpty() && !cardUIDLimpo.equals(pessoa.getCardUID())) {
+            if (pessoaRepository.existsByCardUID(cardUIDLimpo)) {
+                throw new RegraNegocioException("Cartão já cadastrado para outra pessoa");
+            }
+        }
+
+        mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
+        Pessoa pessoaAtualizada = pessoaRepository.save(pessoa);
+        return new PessoaResponseDTO(pessoaAtualizada);
+    }
+
+    public String iniciarCadastroRosto(Long id) {
+        Pessoa pessoa = pessoaRepository.findById(id)
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada com ID: " + id));
 
         Map<String, Object> request = new HashMap<>();
         request.put("id", pessoa.getId());
@@ -47,20 +93,39 @@ public class PessoaService {
             ResponseEntity<String> response = restTemplate.postForEntity(pythonApiUrl, request, String.class);
             return response.getBody();
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao comunicar com o serviço de visão: " + e.getMessage());
+            throw new RegraNegocioException("Erro ao comunicar com o serviço de visão: " + e.getMessage());
         }
     }
-    public void salvarFace(SalvarFaceDTO dto) throws Exception {
+
+    public void salvarFace(SalvarFaceDTO dto) {
         Pessoa pessoa = pessoaRepository.findById(dto.id())
-                .orElseThrow(() -> new Exception("Pessoa não encontrada para o ID: " + dto.id()));
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada para o ID: " + dto.id()));
 
         pessoa.setFaceEncoding(dto.encoding());
         pessoaRepository.save(pessoa);
     }
 
+    public void excluirPessoa(Long id) {
+        if (!pessoaRepository.existsById(id)) {
+            throw new RegraNegocioException("Pessoa não encontrada");
+        }
+        pessoaRepository.deleteById(id);
+    }
+
+    public PessoaResponseDTO buscarDTOPorCartao(String uid) {
+        Pessoa pessoa = pessoaRepository.findByCardUID(uid)
+                .orElseThrow(() -> new RegraNegocioException("Pessoa não encontrada para este cartão"));
+        return new PessoaResponseDTO(pessoa);
+    }
+
+    public List<PessoaResponseDTO> listarPessoasDTOs() {
+        return pessoaRepository.findByAtivoTrue().stream()
+                .map(PessoaResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
     public List<Map<String, Object>> listarFacesParaPython() {
-        return pessoaRepository.findAll()
-                .stream()
+        return pessoaRepository.findAll().stream()
                 .filter(pessoa -> pessoa.getFaceEncoding() != null && !pessoa.getFaceEncoding().isEmpty())
                 .map(pessoa -> {
                     Map<String, Object> faceData = new HashMap<>();
@@ -71,118 +136,34 @@ public class PessoaService {
                 .collect(Collectors.toList());
     }
 
-    public Pessoa salvarPessoa(SalvarPessoaDTO dto) throws Exception {
+    public StatsResponseDTO obterEstatisticas() {
+        long totalPessoas = pessoaRepository.countPessoasAtivas();
+        long funcionarios = pessoaRepository.countByFuncaoAndAtivoTrue(FuncaoPessoa.FUNCIONARIO);
+        long supervisores = pessoaRepository.countByFuncaoAndAtivoTrue(FuncaoPessoa.SUPERVISOR);
+        long gerentes = pessoaRepository.countByFuncaoAndAtivoTrue(FuncaoPessoa.GERENTE);
+        long terceirizados = pessoaRepository.countByFuncaoAndAtivoTrue(FuncaoPessoa.TERCEIRIZADO);
+        long acessosHoje = acessoService.contarAcessosHoje();
+        long acessosNegados = acessoService.contarAcessosNegadosHoje();
+
+        return new StatsResponseDTO(totalPessoas, funcionarios, supervisores, gerentes, terceirizados, acessosHoje, acessosNegados);
+    }
+
+    private void validarDadosObrigatorios(SalvarPessoaDTO dto) {
         if (dto.nome() == null || dto.nome().trim().isEmpty()) {
-            throw new Exception("Nome é obrigatório");
+            throw new RegraNegocioException("Nome é obrigatório");
         }
-
         if (dto.cpf() == null || dto.cpf().trim().isEmpty()) {
-            throw new Exception("CPF é obrigatório");
+            throw new RegraNegocioException("CPF é obrigatório");
         }
-
-        String cpfLimpo = dto.cpf().replaceAll("[^\\d]", "");
-        if (!validarCpf(cpfLimpo)) {
-            throw new Exception("CPF inválido");
-        }
-        LocalDate dataNascimento = null;
-        if (dto.dataNascimento() != null && !dto.dataNascimento().trim().isEmpty()) {
-            try {
-                dataNascimento = LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
-            } catch (Exception e) {
-                throw new Exception("Data de nascimento inválida");
-            }
-        }
-        if (pessoaRepository.existsByCpf(cpfLimpo)) {
-            throw new Exception("CPF já cadastrado no sistema");
-        }
-
-        String cardUIDLimpo = (dto.cardUID() != null) ? dto.cardUID().trim() : null;
-        if (cardUIDLimpo != null && !cardUIDLimpo.isEmpty()) {
-            if (pessoaRepository.existsByCardUID(cardUIDLimpo)) {
-                throw new Exception("Cartão já cadastrado para outra pessoa");
-            }
-        }
-        Pessoa pessoa = new Pessoa();
-        mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
-
-        return pessoaRepository.save(pessoa);
-    }
-    
-    public Optional<Pessoa> buscarPorId(Long id) {
-        return pessoaRepository.findById(id);
-    }
-    
-    public Optional<Pessoa> buscarPorCpf(String cpf) {
-        return pessoaRepository.findByCpf(cpf);
-    }
-    
-    public Optional<Pessoa> buscarPorCartao(String cardUID) {
-        return pessoaRepository.findByCardUID(cardUID);
     }
 
-    public PessoaResponseDTO buscarDTOPorCartao(String uid) throws Exception {
-        Pessoa pessoa = this.buscarPorCartao(uid)
-                .orElseThrow(() -> new Exception("Pessoa não encontrada para este cartão"));
-        return new PessoaResponseDTO(pessoa);
-    }
-    
-    public List<Pessoa> listarPessoasAtivas() {
-        return pessoaRepository.findByAtivoTrue();
-    }
-    
-    public List<Pessoa> buscarPorNome(String nome) {
-        return pessoaRepository.findByNomeContainingIgnoreCaseAndAtivoTrue(nome);
-    }
-
-    public List<Pessoa> buscarPorFuncao(FuncaoPessoa funcao) {
-        return pessoaRepository.findByFuncaoAndAtivoTrue(funcao);
-    }
-    
-    public long contarPessoasAtivas() {
-        return pessoaRepository.countPessoasAtivas();
-    }
-    
-    public long contarPorFuncao(FuncaoPessoa funcao) {
-        return pessoaRepository.countByFuncaoAndAtivoTrue(funcao);
-    }
-
-    public PessoaResponseDTO atualizarPessoa(Long id, AtualizarPessoaDTO dto) throws Exception {
-        Optional<Pessoa> pessoaExistente = pessoaRepository.findById(id);
-
-        if (pessoaExistente.isEmpty()) {
-            throw new Exception("Pessoa não encontrada");
-        }
-
-        Pessoa pessoa = pessoaExistente.get();
-
-        String cpfLimpo = dto.cpf().replaceAll("[^\\d]", "");
-        if (!pessoa.getCpf().equals(cpfLimpo)) {
-            if (pessoaRepository.existsByCpf(cpfLimpo)) {
-                throw new Exception("CPF já cadastrado no sistema");
-            }
-        }
-
-        String cardUIDLimpo = (dto.cardUID() != null) ? dto.cardUID().trim() : null;
-        if (cardUIDLimpo != null && !cardUIDLimpo.isEmpty() &&
-                !cardUIDLimpo.equals(pessoa.getCardUID())) {
-            if (pessoaRepository.existsByCardUID(cardUIDLimpo)) {
-                throw new Exception("Cartão já cadastrado para outra pessoa");
-            }
-        }
-
-        mapearDadosParaEntidade(pessoa, dto.nome(), cpfLimpo, dto.rg(), dto.dataNascimento(), dto.funcao(), dto.cardUID());
-        Pessoa pessoaAtualizada = pessoaRepository.save(pessoa);
-        return new PessoaResponseDTO(pessoaAtualizada);
-    }
-    private void mapearDadosParaEntidade(Pessoa pessoa, String nome, String cpf, String rg,
-                                         String dataNascimentoStr, String funcao, String cardUID) throws Exception {
-
+    private void mapearDadosParaEntidade(Pessoa pessoa, String nome, String cpf, String rg, String dataNascimentoStr, String funcao, String cardUID) {
         LocalDate dataNascimento = null;
         if (dataNascimentoStr != null && !dataNascimentoStr.trim().isEmpty()) {
             try {
                 dataNascimento = LocalDate.parse(dataNascimentoStr, DateTimeFormatter.ISO_LOCAL_DATE);
             } catch (Exception e) {
-                throw new Exception("Data de nascimento inválida");
+                throw new RegraNegocioException("Data de nascimento inválida");
             }
         }
 
@@ -192,83 +173,34 @@ public class PessoaService {
         pessoa.setCpf(cpf);
         pessoa.setRg(rg != null ? rg.trim() : "");
         pessoa.setDataNascimento(dataNascimento);
-        String funcaoString = (funcao != null && !funcao.trim().isEmpty())
-                ? funcao.trim()
-                : "funcionario";
-        FuncaoPessoa funcaoEnum;
+
+        String funcaoString = (funcao != null && !funcao.trim().isEmpty()) ? funcao.trim() : "funcionario";
         try {
-            funcaoEnum = FuncaoPessoa.valueOf(funcaoString.toUpperCase());
+            pessoa.setFuncao(FuncaoPessoa.valueOf(funcaoString.toUpperCase()));
         } catch (IllegalArgumentException e) {
-            throw new Exception("Função inválida fornecida: " + funcaoString);
+            throw new RegraNegocioException("Função inválida fornecida: " + funcaoString);
         }
-        pessoa.setFuncao(funcaoEnum);
+
         pessoa.setCardUID(cardUIDLimpo);
     }
 
-    public void excluirPessoa(Long id) throws Exception {
-        Optional<Pessoa> pessoa = pessoaRepository.findById(id);
-        if (pessoa.isEmpty()) {
-            throw new Exception("Pessoa não encontrada");
-        }
+    private boolean validarCpf(String cpf) {
+        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) return false;
+        try {
+            int soma = 0;
+            for (int i = 0; i < 9; i++) soma += Character.getNumericValue(cpf.charAt(i)) * (10 - i);
+            int digito1 = 11 - (soma % 11);
+            if (digito1 >= 10) digito1 = 0;
+            if (Character.getNumericValue(cpf.charAt(9)) != digito1) return false;
 
-        pessoaRepository.deleteById(id);
-    }
+            soma = 0;
+            for (int i = 0; i < 10; i++) soma += Character.getNumericValue(cpf.charAt(i)) * (11 - i);
+            int digito2 = 11 - (soma % 11);
+            if (digito2 >= 10) digito2 = 0;
 
-
-    public StatsResponseDTO obterEstatisticas() {
-        long totalPessoas = this.contarPessoasAtivas();
-        long funcionarios = this.contarPorFuncao(FuncaoPessoa.FUNCIONARIO);
-        long supervisores = this.contarPorFuncao(FuncaoPessoa.SUPERVISOR);
-        long gerentes = this.contarPorFuncao(FuncaoPessoa.GERENTE);
-        long terceirizados = this.contarPorFuncao(FuncaoPessoa.TERCEIRIZADO);
-
-        long acessosHoje = acessoService.contarAcessosHoje();
-        long acessosNegados = acessoService.contarAcessosNegadosHoje();
-
-        return new StatsResponseDTO(
-                totalPessoas,
-                funcionarios,
-                supervisores,
-                gerentes,
-                terceirizados,
-                acessosHoje,
-                acessosNegados
-        );
-    }
-
-    public List<PessoaResponseDTO> listarPessoasDTOs() {
-        List<Pessoa> pessoas = this.listarPessoasAtivas(); //
-
-        return pessoas.stream()
-                .map(PessoaResponseDTO::new)
-                .collect(Collectors.toList());
-    }
-    
-    public boolean validarCpf(String cpf) {
-        cpf = cpf.replaceAll("[^\\d]", "");
-        
-        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
+            return Character.getNumericValue(cpf.charAt(10)) == digito2;
+        } catch (Exception e) {
             return false;
         }
-        
-        int soma = 0;
-        for (int i = 0; i < 9; i++) {
-            soma += Character.getNumericValue(cpf.charAt(i)) * (10 - i);
-        }
-        int digito1 = 11 - (soma % 11);
-        if (digito1 >= 10) digito1 = 0;
-        
-        if (Character.getNumericValue(cpf.charAt(9)) != digito1) {
-            return false;
-        }
-        
-        soma = 0;
-        for (int i = 0; i < 10; i++) {
-            soma += Character.getNumericValue(cpf.charAt(i)) * (11 - i);
-        }
-        int digito2 = 11 - (soma % 11);
-        if (digito2 >= 10) digito2 = 0;
-        
-        return Character.getNumericValue(cpf.charAt(10)) == digito2;
     }
 }

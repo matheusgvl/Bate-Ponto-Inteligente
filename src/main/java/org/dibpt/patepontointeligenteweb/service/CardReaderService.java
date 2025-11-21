@@ -14,18 +14,14 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class CardReaderService {
 
-
     private static final String PYTHON_EXECUTABLE = "C:\\Users\\isaac\\Downloads\\Projetos em Java\\Bate-Ponto-Inteligente\\vc-and-nfc\\.venv\\Scripts\\python.exe";
     private static final String PYTHON_SCRIPT_PATH = "C:\\Users\\isaac\\Downloads\\Projetos em Java\\Bate-Ponto-Inteligente\\vc-and-nfc\\nfc\\leitor_serial_web.py";
 
     private Process currentProcess;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
     public synchronized Map<String, Object> iniciarLeitura() {
         Map<String, Object> response = new HashMap<>();
-
-
         this.pararLeituraInterno();
 
         try {
@@ -33,20 +29,14 @@ public class CardReaderService {
             pb.redirectErrorStream(true);
             currentProcess = pb.start();
 
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(currentProcess.getInputStream())
-            );
+            BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()));
 
             String line;
             long startTime = System.currentTimeMillis();
             long timeout = 35000;
 
-            System.out.println("Serviço: Iniciando leitura sincronizada...");
-
             while ((line = reader.readLine()) != null) {
-
                 if (System.currentTimeMillis() - startTime > timeout) {
-                    System.out.println("Serviço: Timeout Java atingido.");
                     pararLeituraInterno();
                     response.put("success", false);
                     response.put("error", "Tempo esgotado - nenhum cartão detectado");
