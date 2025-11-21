@@ -24,8 +24,6 @@ public class Local {
     @Column(nullable = false)
     private Boolean ativo = true;
 
-    @Column(name = "nivel_restricao", nullable = false)
-    private String nivelRestricao = "BAIXO";
 
     @Column(name = "capacidade_maxima")
     private Integer capacidadeMaxima;
@@ -68,8 +66,6 @@ public class Local {
     public void setNome(String nome) { this.nome = nome; }
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
-    public String getNivelRestricao() { return nivelRestricao; }
-    public void setNivelRestricao(String nivelRestricao) { this.nivelRestricao = nivelRestricao; }
     public Integer getCapacidadeMaxima() { return capacidadeMaxima; }
     public void setCapacidadeMaxima(Integer capacidadeMaxima) { this.capacidadeMaxima = capacidadeMaxima; }
     public Boolean getAtivo() { return ativo; }
