@@ -214,14 +214,6 @@ public class PessoaService {
         pessoaRepository.deleteById(id);
     }
 
-    public void excluirPessoa(Long id) throws Exception {
-        Optional<Pessoa> pessoa = pessoaRepository.findById(id);
-        if (pessoa.isEmpty()) {
-            throw new Exception("Pessoa não encontrada");
-        }
-        
-        pessoaRepository.deleteById(id);
-    }
 
     public StatsResponseDTO obterEstatisticas() {
         long totalPessoas = this.contarPessoasAtivas();
