@@ -1,6 +1,8 @@
 package org.dibpt.patepontointeligenteweb.Entity;
 
 import jakarta.persistence.*;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,6 +42,14 @@ public class Local {
     @Column(name = "pending_user_id")
     private Long pendingUserId;
 
+    @ElementCollection(targetClass = FuncaoPessoa.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "local_funcoes_autorizadas", joinColumns = @JoinColumn(name = "local_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "funcao")
+    private Set<FuncaoPessoa> funcoesAutorizadas = new HashSet<>();
+
+
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "local_permissoes",
@@ -74,4 +84,7 @@ public class Local {
     public void setPendingUserId(Long pendingUserId) { this.pendingUserId = pendingUserId; }
     public LocalDateTime getPendingAuthTimestamp() { return pendingAuthTimestamp; }
     public void setPendingAuthTimestamp(LocalDateTime pendingAuthTimestamp) { this.pendingAuthTimestamp = pendingAuthTimestamp; }
+    public Set<FuncaoPessoa> getFuncoesAutorizadas() {return funcoesAutorizadas;}
+
+    public void setFuncoesAutorizadas(Set<FuncaoPessoa> funcoesAutorizadas) {this.funcoesAutorizadas = funcoesAutorizadas;}
 }
