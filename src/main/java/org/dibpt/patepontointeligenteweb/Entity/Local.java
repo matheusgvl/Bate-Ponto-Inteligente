@@ -24,7 +24,6 @@ public class Local {
     @Column(nullable = false)
     private Boolean ativo = true;
 
-
     @Column(name = "capacidade_maxima")
     private Integer capacidadeMaxima;
 
@@ -46,14 +45,13 @@ public class Local {
     @Column(name = "funcao")
     private Set<FuncaoPessoa> funcoesAutorizadas = new HashSet<>();
 
-
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "local_permissoes",
             joinColumns = @JoinColumn(name = "local_id"),
             inverseJoinColumns = @JoinColumn(name = "pessoa_id")
     )
+
     private Set<Pessoa> pessoasAutorizadas = new HashSet<>();
 
     public Local() {

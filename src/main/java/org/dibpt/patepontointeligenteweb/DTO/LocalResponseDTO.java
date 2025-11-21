@@ -7,7 +7,6 @@ public record LocalResponseDTO(
         Long id,
         String nome,
         String descricao,
-        String nivelRestricao,
         Integer capacidadeMaxima,
         Boolean ativo,
         LocalDateTime dataCadastro
@@ -17,10 +16,11 @@ public record LocalResponseDTO(
                 local.getId(),
                 local.getNome(),
                 local.getDescricao(),
-                local.getNivelRestricao(),
                 local.getCapacidadeMaxima(),
                 local.getAtivo(),
                 local.getDataCadastro()
         );
     }
+
+
 }
