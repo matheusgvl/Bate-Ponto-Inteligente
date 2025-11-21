@@ -188,7 +188,8 @@ public class AcessoService {
     }
 
     public List<AcessoLogResponseDTO> listarHistoricoDeAcessos() {
-        return acessoRepository.findTop50ByOrderByDataHoraDesc()
+        LocalDateTime dataLimite = LocalDateTime.now().minusDays(7);
+        return acessoRepository.findByDataHoraAfterOrderByDataHoraDesc(dataLimite)
                 .stream()
                 .map(AcessoLogResponseDTO::new)
                 .collect(Collectors.toList());

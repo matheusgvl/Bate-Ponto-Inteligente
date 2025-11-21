@@ -14,5 +14,5 @@ public interface AcessoRepository extends JpaRepository<Acesso, Long> {
 
     long countByTipoAcessoInAndDataHoraBetween(List<TipoAcesso> tipos, LocalDateTime inicio, LocalDateTime fim);
 
-    List<Acesso> findTop50ByOrderByDataHoraDesc();
+    List<Acesso> findByDataHoraAfterOrderByDataHoraDesc(LocalDateTime data);
 }
