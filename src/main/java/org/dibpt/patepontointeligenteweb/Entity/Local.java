@@ -2,6 +2,7 @@ package org.dibpt.patepontointeligenteweb.Entity;
 
 import jakarta.persistence.*;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.NivelRestricao;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -20,6 +21,10 @@ public class Local {
 
     @Column(length = 255, nullable = true)
     private String descricao;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nivel_restricao", nullable = false)
+    private NivelRestricao nivelRestricao = NivelRestricao.BAIXO;
 
     @Column(nullable = false)
     private Boolean ativo = true;
@@ -66,6 +71,8 @@ public class Local {
     public void setNome(String nome) { this.nome = nome; }
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
+    public NivelRestricao getNivelRestricao() { return nivelRestricao; }
+    public void setNivelRestricao(NivelRestricao nivelRestricao) { this.nivelRestricao = nivelRestricao; }
     public Integer getCapacidadeMaxima() { return capacidadeMaxima; }
     public void setCapacidadeMaxima(Integer capacidadeMaxima) { this.capacidadeMaxima = capacidadeMaxima; }
     public Boolean getAtivo() { return ativo; }

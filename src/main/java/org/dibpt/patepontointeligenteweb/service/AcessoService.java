@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class AcessoService {
@@ -216,5 +220,141 @@ public class AcessoService {
                 TipoAcesso.NEGADO_SEM_PERMISSAO_LOCAL
         );
         return acessoRepository.countByTipoAcessoInAndDataHoraBetween(tiposNegados, inicioDoDia, fimDoDia);
+    }
+
+    public Page<AcessoLogResponseDTO> listarLogsComFiltros(int page, int size, LocalDate data, Long pessoaId, Long localId, String tipoAcesso) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataHora"));
+        
+        LocalDateTime dataInicio = null;
+        LocalDateTime dataFim = null;
+        
+        if (data != null) {
+            dataInicio = data.atStartOfDay();
+            dataFim = data.atTime(23, 59, 59);
+        }
+        
+        Page<Acesso> acessos = acessoRepository.findByFiltros(dataInicio, dataFim, pessoaId, localId, tipoAcesso, pageable);
+        
+        return acessos.map(AcessoLogResponseDTO::new);
+    }
+
+    public Map<String, Object> gerarRelatorioAcessos(LocalDate dataInicio, LocalDate dataFim, String periodo) {
+        // Se as datas não foram fornecidas, calcular baseado no período
+        if (dataInicio == null || dataFim == null) {
+            LocalDate hoje = LocalDate.now();
+            switch (periodo) {
+                case "hoje" -> {
+                    dataInicio = hoje;
+                    dataFim = hoje;
+                }
+                case "ultima_semana" -> {
+                    dataInicio = hoje.minusDays(7);
+                    dataFim = hoje;
+                }
+                case "ultimo_mes" -> {
+                    dataInicio = hoje.minusMonths(1);
+                    dataFim = hoje;
+                }
+                case "ultimo_trimestre" -> {
+                    dataInicio = hoje.minusMonths(3);
+                    dataFim = hoje;
+                }
+                default -> {
+                    dataInicio = hoje.minusMonths(1);
+                    dataFim = hoje;
+                }
+            }
+        }
+        
+        LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+        LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
+        
+        // Buscar todos os acessos no período
+        List<Acesso> acessos = acessoRepository.findByDataHoraBetweenOrderByDataHoraDesc(inicioDateTime, fimDateTime);
+        
+        // Calcular estatísticas
+        Map<String, Object> relatorio = new HashMap<>();
+        
+        // Contar acessos permitidos vs negados
+        List<TipoAcesso> tiposPermitidos = List.of(TipoAcesso.PERMITIDO_2FA);
+        List<TipoAcesso> tiposNegados = List.of(
+            TipoAcesso.NEGADO_CARTAO_NAO_ENCONTRADO,
+            TipoAcesso.NEGADO_ROSTO_NAO_RECONHECIDO,
+            TipoAcesso.NEGADO_PESSOA_INATIVA,
+            TipoAcesso.NEGADO_FALHA_LEITURA_CARTAO,
+            TipoAcesso.NEGADO_FALHA_DETECCAO_ROSTO,
+            TipoAcesso.NEGADO_SEM_PERMISSAO_LOCAL,
+            TipoAcesso.NEGADO_SEQUENCIA_INVALIDA,
+            TipoAcesso.NEGADO_ROSTO_NAO_CORRESPONDE,
+            TipoAcesso.NEGADO_TIMEOUT
+        );
+        
+        long acessosPermitidos = acessos.stream()
+            .filter(a -> tiposPermitidos.contains(a.getTipoAcesso()))
+            .count();
+            
+        long acessosNegados = acessos.stream()
+            .filter(a -> tiposNegados.contains(a.getTipoAcesso()))
+            .count();
+        
+        // Contar pessoas únicas
+        long pessoasUnicas = acessos.stream()
+            .filter(a -> a.getPessoa() != null)
+            .map(a -> a.getPessoa().getId())
+            .distinct()
+            .count();
+        
+        // Contar locais únicos acessados
+        long locaisAcessados = acessos.stream()
+            .map(a -> a.getLocal().getId())
+            .distinct()
+            .count();
+        
+        // Top 5 pessoas mais ativas
+        Map<String, Long> topPessoas = acessos.stream()
+            .filter(a -> a.getPessoa() != null)
+            .collect(Collectors.groupingBy(
+                a -> a.getPessoa().getNome(),
+                Collectors.counting()
+            ))
+            .entrySet()
+            .stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(5)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (e1, e2) -> e1,
+                java.util.LinkedHashMap::new
+            ));
+        
+        // Top 5 locais mais acessados
+        Map<String, Long> topLocais = acessos.stream()
+            .collect(Collectors.groupingBy(
+                a -> a.getLocal().getNome(),
+                Collectors.counting()
+            ))
+            .entrySet()
+            .stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(5)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (e1, e2) -> e1,
+                java.util.LinkedHashMap::new
+            ));
+        
+        // Montar resposta
+        relatorio.put("periodo", Map.of("inicio", dataInicio, "fim", dataFim));
+        relatorio.put("totalAcessos", acessos.size());
+        relatorio.put("acessosPermitidos", acessosPermitidos);
+        relatorio.put("acessosNegados", acessosNegados);
+        relatorio.put("pessoasUnicas", pessoasUnicas);
+        relatorio.put("locaisAcessados", locaisAcessados);
+        relatorio.put("topPessoas", topPessoas);
+        relatorio.put("topLocais", topLocais);
+        
+        return relatorio;
     }
 }
