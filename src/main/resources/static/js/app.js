@@ -812,11 +812,10 @@ async function carregarListaPessoas() {
         });
 
         if (!response.ok) {
-            throw new Error('Falha ao buscar pessoas: ' + response.statusText);
+            throw new Error(`Falha ao buscar pessoas: ${response.status}`);
         }
 
         const pessoas = await response.json();
-        console.log('Pessoas recebidas:', pessoas);
 
         if (pessoas.length === 0) {
             pessoasGrid.innerHTML = `
@@ -1170,13 +1169,12 @@ async function carregarListaLocais() {
                 'Content-Type': 'application/json'
             }
         });
-
+        
         if (!response.ok) {
-            throw new Error('Falha ao buscar locais: ' + response.statusText);
+            throw new Error(`Falha ao buscar locais: ${response.status}`);
         }
 
         const locais = await response.json();
-        console.log('Locais recebidos:', locais);
 
         if (locais.length === 0) {
             locaisGrid.innerHTML = `
@@ -1499,6 +1497,8 @@ function excluirLocal(id, nome) {
         ]
     );
 }
+
+// ===== FUNÇÕES DE GERENCIAMENTO DE ACESSO =====
 
 async function carregarOpcoesGerenciamento() {
     await carregarLocaisParaSelect();
@@ -1870,7 +1870,6 @@ async function carregarLogs(page = 0, size = 10) {
         params.append('page', page);
         params.append('size', size);
         
-        // Adicionar filtros
         const data = document.getElementById('filtroData').value;
         const pessoaId = document.getElementById('filtroPessoa').value;
         const localId = document.getElementById('filtroLocal').value;

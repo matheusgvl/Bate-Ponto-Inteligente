@@ -239,7 +239,6 @@ public class AcessoService {
     }
 
     public Map<String, Object> gerarRelatorioAcessos(LocalDate dataInicio, LocalDate dataFim, String periodo) {
-        // Se as datas não foram fornecidas, calcular baseado no período
         if (dataInicio == null || dataFim == null) {
             LocalDate hoje = LocalDate.now();
             switch (periodo) {
@@ -269,13 +268,10 @@ public class AcessoService {
         LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
         LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
         
-        // Buscar todos os acessos no período
         List<Acesso> acessos = acessoRepository.findByDataHoraBetweenOrderByDataHoraDesc(inicioDateTime, fimDateTime);
         
-        // Calcular estatísticas
         Map<String, Object> relatorio = new HashMap<>();
         
-        // Contar acessos permitidos vs negados
         List<TipoAcesso> tiposPermitidos = List.of(TipoAcesso.PERMITIDO_2FA);
         List<TipoAcesso> tiposNegados = List.of(
             TipoAcesso.NEGADO_CARTAO_NAO_ENCONTRADO,
@@ -297,20 +293,17 @@ public class AcessoService {
             .filter(a -> tiposNegados.contains(a.getTipoAcesso()))
             .count();
         
-        // Contar pessoas únicas
         long pessoasUnicas = acessos.stream()
             .filter(a -> a.getPessoa() != null)
             .map(a -> a.getPessoa().getId())
             .distinct()
             .count();
         
-        // Contar locais únicos acessados
         long locaisAcessados = acessos.stream()
             .map(a -> a.getLocal().getId())
             .distinct()
             .count();
         
-        // Top 5 pessoas mais ativas
         Map<String, Long> topPessoas = acessos.stream()
             .filter(a -> a.getPessoa() != null)
             .collect(Collectors.groupingBy(
@@ -328,7 +321,6 @@ public class AcessoService {
                 java.util.LinkedHashMap::new
             ));
         
-        // Top 5 locais mais acessados
         Map<String, Long> topLocais = acessos.stream()
             .collect(Collectors.groupingBy(
                 a -> a.getLocal().getNome(),
@@ -345,7 +337,6 @@ public class AcessoService {
                 java.util.LinkedHashMap::new
             ));
         
-        // Montar resposta
         relatorio.put("periodo", Map.of("inicio", dataInicio, "fim", dataFim));
         relatorio.put("totalAcessos", acessos.size());
         relatorio.put("acessosPermitidos", acessosPermitidos);

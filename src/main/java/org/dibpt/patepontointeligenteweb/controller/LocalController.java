@@ -35,6 +35,11 @@ public class LocalController {
         return ResponseEntity.ok(localService.listarLocaisAtivos());
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> testeEndpoint() {
+        return ResponseEntity.ok("Endpoint funcionando!");
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<LocalResponseDTO> buscarLocalPorId(@PathVariable Long id) {
         try {
