@@ -263,6 +263,7 @@ function setupPersonForm() {
     const cpfInput = document.getElementById('cpf');
     const btnCancelar = document.getElementById('btnCancelar');
     const btnCadastrarCartao = document.getElementById('btnCadastrarCartao');
+    const btnCadastrarRosto = document.getElementById('btnCadastrarRosto');
 
     if (cpfInput) {
         cpfInput.addEventListener('input', function(e) {
@@ -352,6 +353,29 @@ function setupPersonForm() {
             }
 
             startCardReading();
+        });
+    }
+
+    if (btnCadastrarRosto) {
+        btnCadastrarRosto.addEventListener('click', function() {
+            const nome = document.getElementById('nome').value.trim();
+            const cpf = document.getElementById('cpf').value.trim();
+
+            if (!nome || !cpf) {
+                showModal(
+                    'Dados Incompletos',
+                    'Por favor, preencha pelo menos o nome e CPF antes de cadastrar o rosto.',
+                    'fas fa-exclamation-triangle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: closeModal
+                    }]
+                );
+                return;
+            }
+
+            startFaceCapture();
         });
     }
 }
@@ -638,6 +662,97 @@ function showCardError(message) {
 
 function stopCardReading() {
     fetch('/api/person/card/stop', { method: 'POST' }).catch(() => {});
+}
+
+function startFaceCapture() {
+    const nome = document.getElementById('nome').value.trim();
+    
+    showModal(
+        'Captura de Rosto',
+        'Iniciando captura de rosto para ' + nome + '. Posicione-se em frente à câmera...',
+        'fas fa-camera',
+        [
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: () => {
+                    stopFaceCapture();
+                    closeModal();
+                }
+            }
+        ]
+    );
+
+    const modalIcon = document.querySelector('.modal-icon i');
+    modalIcon.className = 'fas fa-camera';
+    modalIcon.parentElement.style.animation = 'modalPulse 1s infinite';
+
+    captureFaceData(nome);
+}
+
+async function captureFaceData(nome) {
+    try {
+        showModal(
+            'Processando...',
+            'Executando captura de rosto. Por favor, aguarde...',
+            'fas fa-spinner fa-spin',
+            []
+        );
+
+        const response = await fetch('/api/person/face/capture', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                nome: nome
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showModal(
+                'Rosto Cadastrado!',
+                `Rosto de ${nome} foi capturado e cadastrado com sucesso!`,
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Erro ao capturar rosto');
+        }
+
+    } catch (error) {
+        console.error('Erro na captura de rosto:', error);
+        showModal(
+            'Erro na Captura',
+            'Não foi possível capturar o rosto: ' + error.message,
+            'fas fa-exclamation-triangle',
+            [
+                {
+                    text: 'Tentar Novamente',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        closeModal();
+                        startFaceCapture();
+                    }
+                },
+                {
+                    text: 'Cancelar',
+                    class: 'modal-btn-secondary',
+                    action: closeModal
+                }
+            ]
+        );
+    }
+}
+
+function stopFaceCapture() {
+    fetch('/api/person/face/stop', { method: 'POST' }).catch(() => {});
 }
 
 async function carregarEstatisticas() {

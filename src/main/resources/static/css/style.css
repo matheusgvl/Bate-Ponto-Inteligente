@@ -608,7 +608,8 @@ body {
 
 .btn-primary,
 .btn-secondary,
-.btn-card {
+.btn-card,
+.btn-face {
     padding: 15px 25px;
     border: none;
     border-radius: 10px;
@@ -654,6 +655,17 @@ body {
 .btn-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 25px rgba(102, 126, 234, 0.5);
+}
+
+.btn-face {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(237, 137, 54, 0.4);
+}
+
+.btn-face:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(237, 137, 54, 0.5);
 }
 
 .cadastro-info {
@@ -923,7 +935,8 @@ body {
 
     .btn-primary,
     .btn-secondary,
-    .btn-card {
+    .btn-card,
+    .btn-face {
         width: 100%;
         max-width: 300px;
     }
