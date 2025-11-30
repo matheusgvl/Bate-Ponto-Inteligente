@@ -812,11 +812,10 @@ async function carregarListaPessoas() {
         });
 
         if (!response.ok) {
-            throw new Error('Falha ao buscar pessoas: ' + response.statusText);
+            throw new Error(`Falha ao buscar pessoas: ${response.status}`);
         }
 
         const pessoas = await response.json();
-        console.log('Pessoas recebidas:', pessoas);
 
         if (pessoas.length === 0) {
             pessoasGrid.innerHTML = `
@@ -1026,12 +1025,32 @@ function setupLocalForm() {
             const formData = new FormData(localForm);
             const localData = {};
 
+            // Processar campos normais
             for (let [key, value] of formData.entries()) {
-                localData[key] = value.trim();
+                if (key !== 'funcoesAutorizadas') {
+                    localData[key] = value.trim();
+                }
             }
 
+            // Processar funções autorizadas (checkboxes)
+            const funcoesCheckboxes = document.querySelectorAll('input[name="funcoesAutorizadas"]:checked');
+            localData.funcoesAutorizadas = Array.from(funcoesCheckboxes).map(checkbox => checkbox.value);
+
             if (localData.nome && localData.descricao && localData.nivelRestricao && localData.capacidadeMaxima) {
-                saveLocalData(localData);
+                if (localData.funcoesAutorizadas.length === 0) {
+                    showModal(
+                        'Funções Não Selecionadas',
+                        'Por favor, selecione pelo menos uma função autorizada para este local.',
+                        'fas fa-exclamation-triangle',
+                        [{
+                            text: 'OK',
+                            class: 'modal-btn-primary',
+                            action: closeModal
+                        }]
+                    );
+                } else {
+                    saveLocalData(localData);
+                }
             } else {
                 showModal(
                     'Dados Incompletos',
@@ -1150,13 +1169,12 @@ async function carregarListaLocais() {
                 'Content-Type': 'application/json'
             }
         });
-
+        
         if (!response.ok) {
-            throw new Error('Falha ao buscar locais: ' + response.statusText);
+            throw new Error(`Falha ao buscar locais: ${response.status}`);
         }
 
         const locais = await response.json();
-        console.log('Locais recebidos:', locais);
 
         if (locais.length === 0) {
             locaisGrid.innerHTML = `
@@ -1198,6 +1216,11 @@ function renderizarLocais(locais) {
                 'ALTO': '#f56565'
             }[local.nivelRestricao] || '#667eea';
             
+            // Formatação das funções autorizadas
+            const funcoesFormatadas = (local.funcoesAutorizadas || []).map(funcao => {
+                return funcao.charAt(0).toUpperCase() + funcao.slice(1).toLowerCase();
+            }).join(', ') || 'Nenhuma função definida';
+            
             const localCard = document.createElement('div');
             localCard.className = 'local-card';
             localCard.innerHTML = `
@@ -1226,6 +1249,10 @@ function renderizarLocais(locais) {
                     <div class="local-detail-item">
                         <span class="local-label">Capacidade:</span>
                         <span class="local-value">${local.capacidadeMaxima} pessoas</span>
+                    </div>
+                    <div class="local-detail-item">
+                        <span class="local-label">Funções Autorizadas:</span>
+                        <span class="local-value funcoes-autorizadas">${funcoesFormatadas}</span>
                     </div>
                 </div>
                 <div class="local-meta">
@@ -1263,16 +1290,157 @@ function renderizarLocais(locais) {
 }
 
 function editarLocal(id) {
-    showModal(
-        'Editar Local',
-        'Funcionalidade em desenvolvimento.',
-        'fas fa-info-circle',
-        [{
-            text: 'OK',
-            class: 'modal-btn-primary',
-            action: closeModal
-        }]
-    );
+    // Buscar os dados do local
+    fetch(`/api/local/${id}`)
+        .then(response => response.json())
+        .then(local => {
+            // Preencher o formulário de edição
+            document.getElementById('editLocalId').value = local.id;
+            document.getElementById('editNomeLocal').value = local.nome;
+            document.getElementById('editDescricaoLocal').value = local.descricao;
+            document.getElementById('editNivelRestricao').value = local.nivelRestricao;
+            document.getElementById('editCapacidadeMaxima').value = local.capacidadeMaxima;
+            
+            // Limpar checkboxes
+            document.querySelectorAll('#editFuncoesAutorizadas input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Marcar funções autorizadas
+            if (local.funcoesAutorizadas && local.funcoesAutorizadas.length > 0) {
+                local.funcoesAutorizadas.forEach(funcao => {
+                    const checkbox = document.getElementById(`edit_funcao_${funcao}`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
+            
+            // Mostrar modal
+            document.getElementById('editLocalModalOverlay').classList.add('active');
+        })
+        .catch(error => {
+            console.error('Erro ao buscar dados do local:', error);
+            showModal(
+                'Erro',
+                'Não foi possível carregar os dados do local.',
+                'fas fa-exclamation-triangle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        });
+}
+
+function closeEditLocalModal() {
+    document.getElementById('editLocalModalOverlay').classList.remove('active');
+}
+
+// Configurar o formulário de edição
+document.addEventListener('DOMContentLoaded', function() {
+    const editLocalForm = document.getElementById('editLocalForm');
+    if (editLocalForm) {
+        editLocalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(editLocalForm);
+            const localData = {};
+            
+            // Processar campos normais
+            for (let [key, value] of formData.entries()) {
+                if (key !== 'funcoesAutorizadas') {
+                    localData[key] = value.trim();
+                }
+            }
+            
+            // Processar funções autorizadas (checkboxes)
+            const funcoesCheckboxes = document.querySelectorAll('#editFuncoesAutorizadas input[name="funcoesAutorizadas"]:checked');
+            localData.funcoesAutorizadas = Array.from(funcoesCheckboxes).map(checkbox => checkbox.value);
+            
+            if (localData.nome && localData.descricao && localData.nivelRestricao && localData.capacidadeMaxima) {
+                if (localData.funcoesAutorizadas.length === 0) {
+                    showModal(
+                        'Funções Não Selecionadas',
+                        'Por favor, selecione pelo menos uma função autorizada para este local.',
+                        'fas fa-exclamation-triangle',
+                        [{
+                            text: 'OK',
+                            class: 'modal-btn-primary',
+                            action: closeModal
+                        }]
+                    );
+                } else {
+                    updateLocalData(localData);
+                }
+            } else {
+                showModal(
+                    'Dados Incompletos',
+                    'Por favor, preencha todos os campos obrigatórios.',
+                    'fas fa-exclamation-triangle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: closeModal
+                    }]
+                );
+            }
+        });
+    }
+});
+
+async function updateLocalData(localData) {
+    try {
+        const response = await fetch(`/api/local/${localData.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(localData)
+        });
+
+        if (response.ok) {
+            showModal(
+                'Sucesso!',
+                `Local "${localData.nome}" foi atualizado com sucesso!`,
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        closeEditLocalModal();
+                        closeModal();
+                        carregarListaLocais(); // Recarregar a lista
+                    }
+                }]
+            );
+        } else {
+            const error = await response.json();
+            showModal(
+                'Erro ao Atualizar',
+                error.message || 'Erro ao atualizar o local.',
+                'fas fa-exclamation-triangle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar local:', error);
+        showModal(
+            'Erro de Conexão',
+            'Erro de conexão com o servidor.',
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
 }
 
 function excluirLocal(id, nome) {
@@ -1329,6 +1497,8 @@ function excluirLocal(id, nome) {
         ]
     );
 }
+
+// ===== FUNÇÕES DE GERENCIAMENTO DE ACESSO =====
 
 async function carregarOpcoesGerenciamento() {
     await carregarLocaisParaSelect();
@@ -1700,7 +1870,6 @@ async function carregarLogs(page = 0, size = 10) {
         params.append('page', page);
         params.append('size', size);
         
-        // Adicionar filtros
         const data = document.getElementById('filtroData').value;
         const pessoaId = document.getElementById('filtroPessoa').value;
         const localId = document.getElementById('filtroLocal').value;
