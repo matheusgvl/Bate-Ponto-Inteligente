@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+import java.util.List;
+import java.time.LocalDate;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/acesso")
@@ -35,6 +38,25 @@ public class AcessoController {
     @GetMapping("/log")
     public ResponseEntity<java.util.List<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO>> getAccessLog() {
         return ResponseEntity.ok(acessoService.listarHistoricoDeAcessos());
+    }
+
+    @GetMapping("/logs")
+    public ResponseEntity<Page<org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO>> getLogsComFiltros(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) LocalDate data,
+            @RequestParam(required = false) Long pessoaId,
+            @RequestParam(required = false) Long localId,
+            @RequestParam(required = false) String tipoAcesso) {
+        return ResponseEntity.ok(acessoService.listarLogsComFiltros(page, size, data, pessoaId, localId, tipoAcesso));
+    }
+
+    @GetMapping("/relatorio")
+    public ResponseEntity<Map<String, Object>> gerarRelatorio(
+            @RequestParam(required = false) LocalDate dataInicio,
+            @RequestParam(required = false) LocalDate dataFim,
+            @RequestParam(defaultValue = "ultimo_mes") String periodo) {
+        return ResponseEntity.ok(acessoService.gerarRelatorioAcessos(dataInicio, dataFim, periodo));
     }
 
     @PostMapping("/vincular")

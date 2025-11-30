@@ -99,6 +99,35 @@ public class PessoaController {
     public ResponseEntity<Map<String, Object>> cancelarLeituraCartao() {
         return ResponseEntity.ok(cardReaderService.pararLeitura());
     }
+
+    @PostMapping("/face/capture")
+    public ResponseEntity<?> capturarRosto(@RequestBody Map<String, String> requestBody) {
+        try {
+            String nome = requestBody.get("nome");
+            if (nome == null || nome.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Nome é obrigatório"));
+            }
+
+            // Chama o serviço Python para captura de rosto
+            Map<String, Object> resultado = pessoaService.capturarRostoPython(nome);
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao capturar rosto: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/face/stop")
+    public ResponseEntity<Map<String, Object>> pararCapturaRosto() {
+        try {
+            Map<String, Object> resultado = pessoaService.pararCapturaRosto();
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao parar captura: " + e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirPessoa(@PathVariable Long id) throws Exception {
         pessoaService.excluirPessoa(id);

@@ -271,4 +271,45 @@ public class PessoaService {
         
         return Character.getNumericValue(cpf.charAt(10)) == digito2;
     }
+
+    public Map<String, Object> capturarRostoPython(String nome) throws Exception {
+        Map<String, Object> request = new HashMap<>();
+        request.put("nome", nome);
+        request.put("action", "register");
+
+        String pythonApiUrl = "http://localhost:5000/face/capture";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(pythonApiUrl, request, Map.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            } else {
+                throw new Exception("Falha na comunicação com o serviço de captura de rosto");
+            }
+        } catch (Exception e) {
+            throw new Exception("Erro ao comunicar com o serviço de visão computacional: " + e.getMessage());
+        }
+    }
+
+    public Map<String, Object> pararCapturaRosto() throws Exception {
+        String pythonApiUrl = "http://localhost:5000/face/stop";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(pythonApiUrl, null, Map.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            } else {
+                Map<String, Object> result = new HashMap<>();
+                result.put("message", "Captura interrompida");
+                return result;
+            }
+        } catch (Exception e) {
+            // Se der erro, assume que foi parado com sucesso
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "Captura interrompida");
+            return result;
+        }
+    }
 }

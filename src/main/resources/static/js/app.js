@@ -48,6 +48,8 @@ function setupSidebar() {
     const pessoaSubmenu = document.getElementById('pessoaSubmenu');
     const localMenuItem = document.getElementById('localMenuItem');
     const localSubmenu = document.getElementById('localSubmenu');
+    const logAcessoMenuItem = document.getElementById('logAcessoMenuItem');
+    const logAcessoSubmenu = document.getElementById('logAcessoSubmenu');
 
     if (menuToggle) {
         menuToggle.addEventListener('click', function() {
@@ -98,6 +100,36 @@ function setupSidebar() {
                 pessoaMenuItem.classList.remove('active');
             }
 
+            if (logAcessoSubmenu) {
+                logAcessoSubmenu.classList.remove('active');
+                logAcessoMenuItem.classList.remove('active');
+            }
+
+            if (!isActive) {
+                return false;
+            }
+        });
+    }
+
+    if (logAcessoMenuItem) {
+        logAcessoMenuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const isActive = logAcessoSubmenu.classList.contains('active');
+            logAcessoSubmenu.classList.toggle('active');
+            logAcessoMenuItem.classList.toggle('active');
+
+            if (pessoaSubmenu) {
+                pessoaSubmenu.classList.remove('active');
+                pessoaMenuItem.classList.remove('active');
+            }
+
+            if (localSubmenu) {
+                localSubmenu.classList.remove('active');
+                localMenuItem.classList.remove('active');
+            }
+
             if (!isActive) {
                 return false;
             }
@@ -105,7 +137,7 @@ function setupSidebar() {
     }
 
     navItems.forEach(item => {
-        if (item.id === 'pessoaMenuItem' || item.id === 'localMenuItem') {
+        if (item.id === 'pessoaMenuItem' || item.id === 'localMenuItem' || item.id === 'logAcessoMenuItem') {
             return;
         }
 
@@ -113,7 +145,7 @@ function setupSidebar() {
             e.preventDefault();
 
             navItems.forEach(nav => {
-                if (nav.id !== 'pessoaMenuItem' && nav.id !== 'localMenuItem') {
+                if (nav.id !== 'pessoaMenuItem' && nav.id !== 'localMenuItem' && nav.id !== 'logAcessoMenuItem') {
                     nav.classList.remove('active');
                 }
             });
@@ -126,6 +158,10 @@ function setupSidebar() {
             if (localSubmenu) {
                 localSubmenu.classList.remove('active');
                 localMenuItem.classList.remove('active');
+            }
+            if (logAcessoSubmenu) {
+                logAcessoSubmenu.classList.remove('active');
+                logAcessoMenuItem.classList.remove('active');
             }
 
             this.classList.add('active');
@@ -175,6 +211,8 @@ function showSection(section) {
     const cadastroLocalPanel = document.getElementById('cadastroLocalPanel');
     const listagemLocaisPanel = document.getElementById('listagemLocaisPanel');
     const gerenciarAcessoLocalPanel = document.getElementById('gerenciarAcessoLocalPanel');
+    const visualizarLogsPanel = document.getElementById('visualizarLogsPanel');
+    const relatorioAcessosPanel = document.getElementById('relatorioAcessosPanel');
 
     dashboardMain.style.display = 'none';
     if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'none';
@@ -182,6 +220,8 @@ function showSection(section) {
     if (cadastroLocalPanel) cadastroLocalPanel.style.display = 'none';
     if (listagemLocaisPanel) listagemLocaisPanel.style.display = 'none';
     if (gerenciarAcessoLocalPanel) gerenciarAcessoLocalPanel.style.display = 'none';
+    if (visualizarLogsPanel) visualizarLogsPanel.style.display = 'none';
+    if (relatorioAcessosPanel) relatorioAcessosPanel.style.display = 'none';
 
     if (section === 'dashboard') {
         dashboardMain.style.display = 'grid';
@@ -204,6 +244,17 @@ function showSection(section) {
             gerenciarAcessoLocalPanel.style.display = 'block';
             carregarOpcoesGerenciamento();
         }
+    } else if (section === 'visualizar-logs') {
+        if (visualizarLogsPanel) {
+            visualizarLogsPanel.style.display = 'block';
+            carregarFiltrosLogs();
+            carregarLogs();
+        }
+    } else if (section === 'relatorio-acessos') {
+        if (relatorioAcessosPanel) {
+            relatorioAcessosPanel.style.display = 'block';
+            gerarRelatorio();
+        }
     }
 }
 
@@ -212,6 +263,7 @@ function setupPersonForm() {
     const cpfInput = document.getElementById('cpf');
     const btnCancelar = document.getElementById('btnCancelar');
     const btnCadastrarCartao = document.getElementById('btnCadastrarCartao');
+    const btnCadastrarRosto = document.getElementById('btnCadastrarRosto');
 
     if (cpfInput) {
         cpfInput.addEventListener('input', function(e) {
@@ -301,6 +353,29 @@ function setupPersonForm() {
             }
 
             startCardReading();
+        });
+    }
+
+    if (btnCadastrarRosto) {
+        btnCadastrarRosto.addEventListener('click', function() {
+            const nome = document.getElementById('nome').value.trim();
+            const cpf = document.getElementById('cpf').value.trim();
+
+            if (!nome || !cpf) {
+                showModal(
+                    'Dados Incompletos',
+                    'Por favor, preencha pelo menos o nome e CPF antes de cadastrar o rosto.',
+                    'fas fa-exclamation-triangle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: closeModal
+                    }]
+                );
+                return;
+            }
+
+            startFaceCapture();
         });
     }
 }
@@ -587,6 +662,97 @@ function showCardError(message) {
 
 function stopCardReading() {
     fetch('/api/person/card/stop', { method: 'POST' }).catch(() => {});
+}
+
+function startFaceCapture() {
+    const nome = document.getElementById('nome').value.trim();
+    
+    showModal(
+        'Captura de Rosto',
+        'Iniciando captura de rosto para ' + nome + '. Posicione-se em frente à câmera...',
+        'fas fa-camera',
+        [
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: () => {
+                    stopFaceCapture();
+                    closeModal();
+                }
+            }
+        ]
+    );
+
+    const modalIcon = document.querySelector('.modal-icon i');
+    modalIcon.className = 'fas fa-camera';
+    modalIcon.parentElement.style.animation = 'modalPulse 1s infinite';
+
+    captureFaceData(nome);
+}
+
+async function captureFaceData(nome) {
+    try {
+        showModal(
+            'Processando...',
+            'Executando captura de rosto. Por favor, aguarde...',
+            'fas fa-spinner fa-spin',
+            []
+        );
+
+        const response = await fetch('/api/person/face/capture', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                nome: nome
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showModal(
+                'Rosto Cadastrado!',
+                `Rosto de ${nome} foi capturado e cadastrado com sucesso!`,
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Erro ao capturar rosto');
+        }
+
+    } catch (error) {
+        console.error('Erro na captura de rosto:', error);
+        showModal(
+            'Erro na Captura',
+            'Não foi possível capturar o rosto: ' + error.message,
+            'fas fa-exclamation-triangle',
+            [
+                {
+                    text: 'Tentar Novamente',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        closeModal();
+                        startFaceCapture();
+                    }
+                },
+                {
+                    text: 'Cancelar',
+                    class: 'modal-btn-secondary',
+                    action: closeModal
+                }
+            ]
+        );
+    }
+}
+
+function stopFaceCapture() {
+    fetch('/api/person/face/stop', { method: 'POST' }).catch(() => {});
 }
 
 async function carregarEstatisticas() {
@@ -1478,3 +1644,331 @@ function removerAcessoSelecionado() {
         }]
     );
 }
+
+// ===== FUNÇÕES DE LOG DE ACESSO =====
+
+let currentPage = 0;
+let currentSize = 10;
+let currentFilters = {};
+
+function carregarFiltrosLogs() {
+    carregarPessoasParaFiltro();
+    carregarLocaisParaFiltro();
+}
+
+async function carregarPessoasParaFiltro() {
+    try {
+        const response = await fetch('/api/pessoa/list');
+        const pessoas = await response.json();
+        
+        const select = document.getElementById('filtroPessoa');
+        select.innerHTML = '<option value="">Todas as pessoas</option>';
+        
+        pessoas.forEach(pessoa => {
+            const option = document.createElement('option');
+            option.value = pessoa.id;
+            option.textContent = pessoa.nome;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar pessoas para filtro:', error);
+    }
+}
+
+async function carregarLocaisParaFiltro() {
+    try {
+        const response = await fetch('/api/local/list');
+        const locais = await response.json();
+        
+        const select = document.getElementById('filtroLocal');
+        select.innerHTML = '<option value="">Todos os locais</option>';
+        
+        locais.forEach(local => {
+            const option = document.createElement('option');
+            option.value = local.id;
+            option.textContent = local.nome;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar locais para filtro:', error);
+    }
+}
+
+async function carregarLogs(page = 0, size = 10) {
+    try {
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('size', size);
+        
+        // Adicionar filtros
+        const data = document.getElementById('filtroData').value;
+        const pessoaId = document.getElementById('filtroPessoa').value;
+        const localId = document.getElementById('filtroLocal').value;
+        const tipoAcesso = document.getElementById('filtroTipoAcesso').value;
+        
+        if (data) params.append('data', data);
+        if (pessoaId) params.append('pessoaId', pessoaId);
+        if (localId) params.append('localId', localId);
+        if (tipoAcesso) params.append('tipoAcesso', tipoAcesso);
+        
+        currentPage = page;
+        currentSize = size;
+        currentFilters = { data, pessoaId, localId, tipoAcesso };
+        
+        const response = await fetch(`/api/acesso/logs?${params}`);
+        const result = await response.json();
+        
+        exibirLogs(result.content);
+        atualizarPaginacao(result);
+        
+    } catch (error) {
+        console.error('Erro ao carregar logs:', error);
+        const tbody = document.getElementById('logsTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Erro ao carregar logs: ${error.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function exibirLogs(logs) {
+    const tbody = document.getElementById('logsTableBody');
+    
+    if (logs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhum log encontrado com os filtros aplicados</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = logs.map(log => {
+        const dataFormatada = new Date(log.dataHora).toLocaleString('pt-BR');
+        const statusClass = log.tipoAcesso.startsWith('PERMITIDO') ? 'status-permitido' : 'status-negado';
+        const statusText = log.tipoAcesso.startsWith('PERMITIDO') ? 'Permitido' : 'Negado';
+        const statusIcon = log.tipoAcesso.startsWith('PERMITIDO') ? 'fas fa-check-circle' : 'fas fa-times-circle';
+        
+        return `
+            <tr>
+                <td>${dataFormatada}</td>
+                <td>
+                    <div class="pessoa-info">
+                        <i class="fas fa-user"></i>
+                        <span>${log.nomePessoa}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="local-info">
+                        <i class="fas fa-building"></i>
+                        <span>${log.nomeLocal}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="tipo-acesso">${log.tipoAcesso.replace(/_/g, ' ')}</span>
+                </td>
+                <td>
+                    <span class="status ${statusClass}">
+                        <i class="${statusIcon}"></i>
+                        ${statusText}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-small btn-secondary" onclick="verDetalhesLog(${log.id})">
+                        <i class="fas fa-eye"></i> Ver Detalhes
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function atualizarPaginacao(result) {
+    const info = document.getElementById('paginationInfo');
+    const btnPrev = document.getElementById('btnPrevPage');
+    const btnNext = document.getElementById('btnNextPage');
+    const pageNumbers = document.getElementById('pageNumbers');
+    
+    // Atualizar informações
+    const total = result.totalElements;
+    const inicio = (result.number * result.size) + 1;
+    const fim = Math.min((result.number + 1) * result.size, total);
+    
+    info.textContent = `Mostrando ${inicio} a ${fim} de ${total} registros`;
+    
+    // Atualizar botões
+    btnPrev.disabled = result.first;
+    btnNext.disabled = result.last;
+    
+    // Atualizar números das páginas
+    const currentPage = result.number + 1;
+    const totalPages = result.totalPages;
+    pageNumbers.textContent = `${currentPage} de ${totalPages}`;
+}
+
+function paginaAnterior() {
+    if (currentPage > 0) {
+        carregarLogs(currentPage - 1, currentSize);
+    }
+}
+
+function proximaPagina() {
+    carregarLogs(currentPage + 1, currentSize);
+}
+
+function limparFiltros() {
+    document.getElementById('filtroData').value = '';
+    document.getElementById('filtroPessoa').value = '';
+    document.getElementById('filtroLocal').value = '';
+    document.getElementById('filtroTipoAcesso').value = '';
+    carregarLogs(0, 10);
+}
+
+function verDetalhesLog(logId) {
+    showModal(
+        'Detalhes do Log',
+        'Funcionalidade de detalhes será implementada em breve.',
+        'fas fa-info-circle',
+        [{
+            text: 'OK',
+            class: 'modal-btn-primary',
+            action: closeModal
+        }]
+    );
+}
+
+// ===== FUNÇÕES DE RELATÓRIO =====
+
+async function gerarRelatorio() {
+    try {
+        const periodo = document.getElementById('periodoRelatorio').value;
+        const params = new URLSearchParams();
+        params.append('periodo', periodo);
+        
+        if (periodo === 'personalizado') {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            
+            if (dataInicio && dataFim) {
+                params.append('dataInicio', dataInicio);
+                params.append('dataFim', dataFim);
+            }
+        }
+        
+        const response = await fetch(`/api/acesso/relatorio?${params}`);
+        const relatorio = await response.json();
+        
+        exibirRelatorio(relatorio);
+        
+    } catch (error) {
+        console.error('Erro ao gerar relatório:', error);
+        showModal(
+            'Erro',
+            'Não foi possível gerar o relatório: ' + error.message,
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
+}
+
+function exibirRelatorio(relatorio) {
+    // Atualizar cards de resumo
+    document.getElementById('totalAcessosPermitidos').textContent = relatorio.acessosPermitidos || 0;
+    document.getElementById('totalAcessosNegados').textContent = relatorio.acessosNegados || 0;
+    document.getElementById('totalPessoasUnicas').textContent = relatorio.pessoasUnicas || 0;
+    document.getElementById('totalLocaisAcessados').textContent = relatorio.locaisAcessados || 0;
+    
+    // Exibir top pessoas
+    exibirTopPessoas(relatorio.topPessoas || {});
+    
+    // Exibir top locais
+    exibirTopLocais(relatorio.topLocais || {});
+}
+
+function exibirTopPessoas(topPessoas) {
+    const container = document.getElementById('topPessoas');
+    
+    if (Object.keys(topPessoas).length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <p>Nenhum dado disponível</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = Object.entries(topPessoas).map(([nome, count], index) => `
+        <div class="top-item">
+            <div class="ranking">${index + 1}º</div>
+            <div class="info">
+                <div class="name">${nome}</div>
+                <div class="count">${count} acessos</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function exibirTopLocais(topLocais) {
+    const container = document.getElementById('topLocais');
+    
+    if (Object.keys(topLocais).length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-building-slash"></i>
+                <p>Nenhum dado disponível</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = Object.entries(topLocais).map(([nome, count], index) => `
+        <div class="top-item">
+            <div class="ranking">${index + 1}º</div>
+            <div class="info">
+                <div class="name">${nome}</div>
+                <div class="count">${count} acessos</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function exportarRelatorio() {
+    showModal(
+        'Exportar Relatório',
+        'Funcionalidade de exportação será implementada em breve.',
+        'fas fa-download',
+        [{
+            text: 'OK',
+            class: 'modal-btn-primary',
+            action: closeModal
+        }]
+    );
+}
+
+// Event listeners para o período personalizado
+document.addEventListener('DOMContentLoaded', function() {
+    const periodoSelect = document.getElementById('periodoRelatorio');
+    const periodoPersonalizado = document.getElementById('periodoPersonalizado');
+    
+    if (periodoSelect) {
+        periodoSelect.addEventListener('change', function() {
+            if (this.value === 'personalizado') {
+                periodoPersonalizado.style.display = 'flex';
+            } else {
+                periodoPersonalizado.style.display = 'none';
+            }
+        });
+    }
+});

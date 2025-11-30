@@ -17,7 +17,7 @@ public record LocalResponseDTO(
                 local.getId(),
                 local.getNome(),
                 local.getDescricao(),
-                local.getNivelRestricao(),
+                local.getNivelRestricao().name(),
                 local.getCapacidadeMaxima(),
                 local.getAtivo(),
                 local.getDataCadastro()

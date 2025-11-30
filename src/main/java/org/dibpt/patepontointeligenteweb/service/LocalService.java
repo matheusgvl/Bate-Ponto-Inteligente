@@ -3,6 +3,7 @@ package org.dibpt.patepontointeligenteweb.service;
 import org.dibpt.patepontointeligenteweb.DTO.LocalRequestDTO;
 import org.dibpt.patepontointeligenteweb.DTO.LocalResponseDTO;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.NivelRestricao;
 import org.dibpt.patepontointeligenteweb.Entity.Local;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.repository.LocalRepository;
@@ -32,6 +33,16 @@ public class LocalService {
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
+        
+        // Configurar nível de restrição
+        if (dto.nivelRestricao() != null) {
+            try {
+                local.setNivelRestricao(NivelRestricao.valueOf(dto.nivelRestricao().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                local.setNivelRestricao(NivelRestricao.BAIXO); // Valor padrão
+            }
+        }
+        
         if (dto.funcoesAutorizadas() != null) {
             Set<FuncaoPessoa> funcoes = new HashSet<>();
             for (String f : dto.funcoesAutorizadas()) {
@@ -52,6 +63,16 @@ public class LocalService {
         local.setNome(dto.nome());
         local.setDescricao(dto.descricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
+        
+        // Configurar nível de restrição
+        if (dto.nivelRestricao() != null) {
+            try {
+                local.setNivelRestricao(NivelRestricao.valueOf(dto.nivelRestricao().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                local.setNivelRestricao(NivelRestricao.BAIXO); // Valor padrão
+            }
+        }
+        
         if (dto.funcoesAutorizadas() != null) {
             local.getFuncoesAutorizadas().clear();
             for (String f : dto.funcoesAutorizadas()) {
