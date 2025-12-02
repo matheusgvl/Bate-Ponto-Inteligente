@@ -1,3 +1,4 @@
+let tempFaceEncoding = null;
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
@@ -613,20 +614,40 @@ async function savePersonData(personData) {
         });
 
         if (response.ok) {
-            const result = await response.json();
+            const pessoaSalva = await response.json();
+
+            if (tempFaceEncoding) {
+                console.log("Salvando rosto para o ID:", pessoaSalva.id);
+
+                await fetch('/api/person/register-face', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        id: pessoaSalva.id, // O ID real do banco
+                        encoding: JSON.stringify(tempFaceEncoding) // O rosto que estava na memória
+                    })
+                });
+            }
+
             showModal(
                 'Sucesso!',
-                `Pessoa ${personData.nome} cadastrada com sucesso!\nCartão UID: ${personData.cardUID}`,
+                `Pessoa ${personData.nome} cadastrada com sucesso!`,
                 'fas fa-check-circle',
                 [{
                     text: 'OK',
                     class: 'modal-btn-primary',
                     action: () => {
                         document.getElementById('cadastroPessoaForm').reset();
+                        tempFaceEncoding = null; // IMPORTANTE: Limpa a memória para o próximo cadastro
+
+                        const cardInput = document.getElementById('cardUID');
+                        if(cardInput) cardInput.value = '';
+
                         closeModal();
                         showSection('dashboard');
-                        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                        document.querySelector('.nav-item[data-section="dashboard"]').classList.add('active');
+
+                        if(typeof carregarEstatisticas === 'function') carregarEstatisticas();
+                        if(typeof carregarListaPessoas === 'function') carregarListaPessoas();
                     }
                 }]
             );
@@ -692,9 +713,11 @@ function startFaceCapture() {
 
 async function captureFaceData(nome) {
     try {
+        tempFaceEncoding = null;
+
         showModal(
             'Processando...',
-            'Executando captura de rosto. Por favor, aguarde...',
+            'Iniciando sistema de câmera...',
             'fas fa-spinner fa-spin',
             []
         );
@@ -704,49 +727,76 @@ async function captureFaceData(nome) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 nome: nome
             })
         });
 
-        if (response.ok) {
-            const result = await response.json();
-            showModal(
-                'Rosto Cadastrado!',
-                `Rosto de ${nome} foi capturado e cadastrado com sucesso!`,
-                'fas fa-check-circle',
-                [{
-                    text: 'OK',
-                    class: 'modal-btn-primary',
-                    action: closeModal
-                }]
-            );
-        } else {
-            const error = await response.json();
-            throw new Error(error.message || 'Erro ao capturar rosto');
-        }
+        if (!response.ok) throw new Error('Falha ao iniciar captura no servidor');
+
+        showModal(
+            'Escaneando Rosto...',
+            'Olhe fixamente para a câmera. Aguardando detecção...',
+            'fas fa-camera',
+            []
+        );
+
+        const checkInterval = setInterval(async () => {
+            try {
+                const statusRes = await fetch('/api/person/face/status');
+                const statusData = await statusRes.json();
+
+                if (statusData.status === 'success' && statusData.encoding) {
+                    clearInterval(checkInterval);
+
+                    tempFaceEncoding = statusData.encoding;
+
+                    showModal(
+                        'Rosto Capturado!',
+                        `Rosto de ${nome} detectado com sucesso! Clique em "Salvar Pessoa" para finalizar.`,
+                        'fas fa-check-circle',
+                        [{
+                            text: 'OK',
+                            class: 'modal-btn-primary',
+                            action: closeModal
+                        }]
+                    );
+                }
+                else if (statusData.status === 'error') {
+                    clearInterval(checkInterval);
+                    showModal('Erro', 'O sistema não conseguiu capturar o rosto.', 'fas fa-times', [{text: 'Fechar', action: closeModal}]);
+                }
+            } catch (e) {
+                console.error("Erro no polling:", e);
+            }
+        }, 1000);
+
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            if (!tempFaceEncoding) {
+                // Avisa o Python para parar de tentar
+                fetch('/api/person/face/stop', {method: 'POST'}).catch(() => {});
+
+                showModal(
+                    'Tempo Esgotado',
+                    'Nenhum rosto detectado em 30 segundos. Tente novamente.',
+                    'fas fa-clock',
+                    [{text: 'Fechar', action: closeModal}]
+                );
+            }
+        }, 30000);
 
     } catch (error) {
         console.error('Erro na captura de rosto:', error);
         showModal(
             'Erro na Captura',
-            'Não foi possível capturar o rosto: ' + error.message,
+            'Não foi possível conectar com a câmera: ' + error.message,
             'fas fa-exclamation-triangle',
-            [
-                {
-                    text: 'Tentar Novamente',
-                    class: 'modal-btn-primary',
-                    action: () => {
-                        closeModal();
-                        startFaceCapture();
-                    }
-                },
-                {
-                    text: 'Cancelar',
-                    class: 'modal-btn-secondary',
-                    action: closeModal
-                }
-            ]
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
         );
     }
 }

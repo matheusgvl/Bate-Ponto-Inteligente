@@ -133,4 +133,9 @@ public class PessoaController {
         pessoaService.excluirPessoa(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/face/status")
+    public ResponseEntity<Map<String, Object>> verificarStatusCaptura() {
+        return ResponseEntity.ok(pessoaService.verificarStatusCaptura());
+    }
 }

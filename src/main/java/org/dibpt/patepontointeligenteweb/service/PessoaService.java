@@ -243,6 +243,19 @@ public class PessoaService {
                 .map(PessoaResponseDTO::new)
                 .collect(Collectors.toList());
     }
+
+    public Map<String, Object> verificarStatusCaptura() {
+        String pythonApiUrl = "http://localhost:5000/face/status";
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(pythonApiUrl, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            Map<String, Object> erro = new HashMap<>();
+            erro.put("status", "error");
+            erro.put("message", "Python offline");
+            return erro;
+        }
+    }
     
     public boolean validarCpf(String cpf) {
         cpf = cpf.replaceAll("[^\\d]", "");
@@ -306,7 +319,6 @@ public class PessoaService {
                 return result;
             }
         } catch (Exception e) {
-            // Se der erro, assume que foi parado com sucesso
             Map<String, Object> result = new HashMap<>();
             result.put("message", "Captura interrompida");
             return result;
