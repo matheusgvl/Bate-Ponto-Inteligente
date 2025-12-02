@@ -10,37 +10,45 @@ import os
 
 app = Flask(__name__)
 
+# --- VARIAVEIS GLOBAIS ---
 known_face_names = []
 known_face_encodings = []
 
+# Estado da captura (Adicionamos o campo 'encoding' para guardar o rosto temporariamente)
+capture_state = {
+    "status": "idle",
+    "message": "",
+    "encoding": None
+}
+
 video_capture = cv2.VideoCapture(0)
 running = True
-registration_id = None
+registration_id = None # Se for diferente de None, está em modo de cadastro
 data_lock = threading.Lock()
 
 SPRING_BOOT_API_URL = "http://localhost:8080/api"
-
 LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
 
+# --- FUNÇÕES ---
 
 def sync_faces_from_spring():
-
     global known_face_names, known_face_encodings
-
     print("[INFO] Sincronizando rostos com o backend Spring Boot...")
     try:
         response = requests.get(f"{SPRING_BOOT_API_URL}/person/faces")
 
         if response.status_code == 200:
             data = response.json()
-
             temp_names = []
             temp_encodings = []
 
             for item in data:
                 temp_names.append(item['nome'])
-                encoding_list = json.loads(item['encoding'])
-                temp_encodings.append(np.array(encoding_list))
+                try:
+                    encoding_list = json.loads(item['encoding'])
+                    temp_encodings.append(np.array(encoding_list))
+                except:
+                    pass
 
             with data_lock:
                 known_face_names = temp_names
@@ -51,22 +59,20 @@ def sync_faces_from_spring():
             print(f"[ERRO] Falha ao buscar rostos. Status: {response.status_code}")
 
     except requests.exceptions.ConnectionError:
-        print("[ERRO] Não foi possível conectar ao backend Spring Boot. Verifique se ele está rodando.")
-
+        print("[ERRO] Não foi possível conectar ao backend Spring Boot.")
 
 def video_processing_thread():
-
-    global registration_id, running
-
+    global registration_id, running, capture_state, known_face_names, known_face_encodings
     last_recognition_time = {}
 
     while running:
         ret, frame = video_capture.read()
         if not ret:
-            print("[ERRO] Não foi possível capturar frame da câmera.")
+            print("[ERRO] Falha na câmera.")
             time.sleep(1)
             continue
 
+        # Reduz tamanho para processar rápido
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
         rgb = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
@@ -77,6 +83,7 @@ def video_processing_thread():
             for (top, right, bottom, left), face_encoding in zip(faces, encodings):
                 name = "Desconhecido"
 
+                # 1. Tenta Reconhecer (Modo Normal de Acesso)
                 if len(known_face_encodings) > 0:
                     matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
                     face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
@@ -84,7 +91,7 @@ def video_processing_thread():
                     if matches[best_match_index]:
                         name = known_face_names[best_match_index]
 
-
+                # 2. Se reconheceu alguém, registra acesso
                 if name != "Desconhecido":
                     now = time.time()
                     if name not in last_recognition_time or (now - last_recognition_time[name] > 60):
@@ -93,48 +100,34 @@ def video_processing_thread():
                             payload = {"nome": name, "localId": LOCAL_ID}
                             requests.post(f"{SPRING_BOOT_API_URL}/acesso/registrar/rosto", json=payload)
                             last_recognition_time[name] = now
-                        except requests.exceptions.ConnectionError:
-                            print(f"[ERRO] Falha ao enviar reconhecimento de {name} para o Spring.")
+                        except:
+                            pass
 
+                # 3. Lógica de Cadastro (AQUI MUDOU)
+                # Se o rosto é desconhecido E estamos no modo cadastro (registration_id ativado)
                 elif name == "Desconhecido" and registration_id is not None:
-                    print(f"[CADASTRO] Rosto desconhecido capturado para registro: {registration_id}")
-                    try:
-                        encoding_str = json.dumps(face_encoding.tolist())
+                    print(f"[CADASTRO] Rosto capturado! Guardando na memória...")
 
-                        # Se registration_id é um hash (captura por nome), precisamos encontrar o nome
-                        if registration_id > 100000:  # IDs gerados por hash são maiores
-                            # Para captura por nome, vamos criar um payload especial
-                            payload = {
-                                "encoding": encoding_str,
-                                "captured_by_name": True
-                            }
-                            print(f"[CADASTRO] Enviando encoding capturado por nome...")
-                        else:
-                            # Captura tradicional por ID
-                            payload = {
-                                "id": registration_id,
-                                "encoding": encoding_str
-                            }
+                    # Em vez de enviar pro Java agora, guardamos aqui
+                    encoding_list = face_encoding.tolist()
 
-                        response = requests.post(f"{SPRING_BOOT_API_URL}/person/register-face", json=payload)
+                    capture_state = {
+                        "status": "success",
+                        "message": "Rosto capturado com sucesso!",
+                        "encoding": encoding_list
+                    }
 
-                        if response.status_code == 200:
-                            print(f"[CADASTRO] Rosto enviado ao Spring com sucesso.")
-                            sync_faces_from_spring()
-                        else:
-                            print(f"[ERRO] Spring recusou o cadastro. Status: {response.status_code}")
-
-                    except requests.exceptions.ConnectionError:
-                        print(f"[ERRO] Falha ao enviar novo cadastro para o Spring.")
-
+                    # Desativa o modo cadastro pois já pegou
                     registration_id = None
 
+                # Desenha quadrado na tela
                 top *= 4
                 right *= 4
                 bottom *= 4
                 left *= 4
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
+                color = (0, 255, 0) if name != "Desconhecido" else (0, 0, 255)
+                cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
                 cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255), 1)
 
         cv2.imshow("Bate-Ponto Inteligente (Python Service)", frame)
@@ -145,86 +138,60 @@ def video_processing_thread():
 
     video_capture.release()
     cv2.destroyAllWindows()
-    print("[INFO] Thread da câmera finalizada.")
+    print("[INFO] Câmera finalizada.")
 
+# --- ENDPOINTS ---
 
 @app.route("/register", methods=["POST"])
 def start_registration():
-
+    # Mantido para compatibilidade, caso use cadastro por ID direto
     global registration_id
     data = request.get_json()
-
-    if "id" not in data or "nome" not in data:
-        return jsonify({"erro": "Os campos 'id' e 'nome' são obrigatórios."}), 400
-
-    id_to_register = data["id"]
-    name_to_register = data["nome"]
-    registration_id = id_to_register
-
-    print(f"\n[API] MODO DE CADASTRO ATIVADO PARA: ID={id_to_register}, Nome={name_to_register}")
-    print("[API] Aproxime o rosto da câmera...")
-
-    return jsonify({"mensagem": f"Modo de cadastro ativado para {name_to_register}."}), 200
+    registration_id = data.get("id", 999999)
+    return jsonify({"mensagem": "Modo cadastro ativado"}), 200
 
 @app.route("/face/capture", methods=["POST"])
 def start_face_capture():
-    """Endpoint para captura de rosto usando apenas o nome"""
-    global registration_id
+    global registration_id, capture_state
     data = request.get_json()
 
-    if "nome" not in data:
-        return jsonify({"erro": "O campo 'nome' é obrigatório."}), 400
+    # Limpa estado anterior
+    capture_state = {"status": "capturing", "message": "Aguardando rosto...", "encoding": None}
 
-    name_to_register = data["nome"]
-    # Usar um ID temporário baseado no nome para o processo de captura
-    registration_id = hash(name_to_register) % 1000000  # ID temporário baseado no nome
-    
-    print(f"\n[API] MODO DE CAPTURA DE ROSTO ATIVADO PARA: Nome={name_to_register}")
-    print("[API] Posicione-se em frente à câmera...")
+    # Ativa modo cadastro (qualquer valor não nulo serve)
+    registration_id = 123456
 
-    return jsonify({
-        "mensagem": f"Captura de rosto iniciada para {name_to_register}.",
-        "nome": name_to_register,
-        "status": "capturing"
-    }), 200
+    print(f"[API] Iniciando captura para: {data.get('nome')}")
+    return jsonify({"mensagem": "Captura iniciada", "status": "capturing"}), 200
+
+@app.route("/face/status", methods=["GET"])
+def get_capture_status():
+    global capture_state
+    # O front-end chama isso para pegar o encoding quando estiver pronto
+    return jsonify(capture_state), 200
 
 @app.route("/face/stop", methods=["POST"])
 def stop_face_capture():
-    """Endpoint para parar a captura de rosto"""
-    global registration_id
-    
-    if registration_id is not None:
-        print(f"\n[API] Parando captura de rosto para ID: {registration_id}")
-        registration_id = None
-        return jsonify({"mensagem": "Captura de rosto interrompida com sucesso."}), 200
-    else:
-        return jsonify({"mensagem": "Nenhuma captura ativa encontrada."}), 200
+    global registration_id, capture_state
+    registration_id = None
+    capture_state = {"status": "idle", "message": "Cancelado", "encoding": None}
+    return jsonify({"mensagem": "Parado"}), 200
 
 @app.route("/sync", methods=["POST"])
 def force_sync():
-
-    print("\n[API] Sincronização forçada solicitada pelo Spring.")
     threading.Thread(target=sync_faces_from_spring).start()
-    return jsonify({"mensagem": "Sincronização iniciada."}), 202
+    return jsonify({"mensagem": "Sync iniciado"}), 202
 
 @app.route("/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "online"}), 200
 
-
 if __name__ == "__main__":
-    print("[INIT] Iniciando serviço de visão computacional...")
+    print("[INIT] Iniciando serviço...")
     sync_faces_from_spring()
 
-    print("[INIT] Iniciando thread da câmera...")
     cam_thread = threading.Thread(target=video_processing_thread)
     cam_thread.daemon = True
     cam_thread.start()
 
-    print("[INIT] Iniciando servidor Flask na porta 5000...")
     app.run(host="0.0.0.0", port=5000, debug=False)
-
-    print("[INFO] Parando o servidor...")
-    running = False
-    cam_thread.join()
-    print("[INFO] Serviço finalizado.")
