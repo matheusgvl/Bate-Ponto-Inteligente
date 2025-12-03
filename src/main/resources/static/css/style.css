@@ -594,8 +594,10 @@ body {
 }
 
 .cadastro-form .form-group select option {
-    background: #2d3748;
+    background: #2a2d47;
     color: white;
+    padding: 12px;
+    font-size: 16px;
 }
 
 .form-actions {
@@ -1122,10 +1124,10 @@ body {
 
 .checkbox-group {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
     margin-top: 10px;
-    padding: 15px;
+    padding: 20px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1134,8 +1136,16 @@ body {
 .checkbox-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    padding: 8px 0;
     cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    padding-left: 8px;
+}
+
+.checkbox-item:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .checkbox-item input[type="checkbox"] {
@@ -1143,6 +1153,8 @@ body {
     height: 18px;
     cursor: pointer;
     accent-color: #667eea;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .checkbox-item label {
@@ -1151,6 +1163,9 @@ body {
     font-size: 14px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    flex: 1;
+    line-height: 1.3;
 }
 
 .checkbox-item:hover label {
@@ -1175,8 +1190,98 @@ body {
 #editLocalModalOverlay .modal {
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
+    margin: 2vh auto;
+    position: relative;
+    top: 0;
+}
+
+#editLocalModalOverlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#editLocalModalOverlay .checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px 25px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#editLocalModalOverlay .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#editLocalModalOverlay .checkbox-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+#editLocalModalOverlay .checkbox-item input[type="checkbox"]:checked + label {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Responsivo para checkboxes em telas menores */
+@media (max-width: 768px) {
+    .checkbox-group,
+    #editLocalModalOverlay .checkbox-group {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 20px 15px;
+    }
+    
+    .checkbox-item,
+    #editLocalModalOverlay .checkbox-item {
+        padding: 12px 15px;
+        gap: 12px;
+    }
+    
+    #editLocalModalOverlay .modal {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    /* Responsivo para período personalizado */
+    .periodo-personalizado {
+        margin-left: 0;
+        margin-top: 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .periodo-personalizado input {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .period-selector {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .period-selector select {
+        min-width: auto;
+        width: 100%;
+    }
 }
 
 #editLocalModalOverlay .modal-header {
@@ -1216,142 +1321,6 @@ body {
     display: flex;
     gap: 15px;
     justify-content: flex-end;
-}
-
-.gerenciar-acesso-local-panel {
-    padding: 20px;
-    margin-bottom: 30px;
-}
-
-.gerenciar-acesso-container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 30px;
-}
-
-.acesso-form-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
-}
-
-.acessos-vinculados {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
-}
-
-.acessos-vinculados h3 {
-    color: white;
-    font-size: 20px;
-    font-weight: 500;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.acessos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
-}
-
-.acesso-card {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.acesso-card:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-2px);
-}
-
-.acesso-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.acesso-info h4 {
-    color: white;
-    font-size: 16px;
-    margin-bottom: 5px;
-}
-
-.acesso-info p {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    margin: 0;
-}
-
-.acesso-remove {
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-    border-radius: 8px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.acesso-remove:hover {
-    background: rgba(239, 68, 68, 0.3);
-    transform: scale(1.1);
-}
-
-.local-details {
-    margin-bottom: 15px;
-    padding: 15px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.local-detail-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.local-detail-item:last-child {
-    margin-bottom: 0;
-}
-
-.local-label {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.local-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    border: 1px solid;
-}
-
-.local-value {
-    color: white;
-    font-size: 14px;
-    font-weight: 500;
 }
 
 .listagem-locais-panel {
@@ -1850,9 +1819,13 @@ body {
 
 .search-filters {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px 25px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .filter-group {
@@ -1879,6 +1852,24 @@ body {
     color: white;
     font-size: 14px;
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.filter-group select {
+    position: relative;
+    z-index: 50;
+}
+
+.filter-group select:focus {
+    z-index: 100;
+}
+
+.filter-group select option {
+    background: #2a2d47;
+    color: white;
+    padding: 8px 12px;
+    border: none;
 }
 
 .filter-group select:focus,
@@ -1886,6 +1877,7 @@ body {
     outline: none;
     border-color: #667eea;
     background: rgba(255, 255, 255, 0.15);
+    z-index: 100;
 }
 
 .logs-actions {
@@ -2049,27 +2041,76 @@ body {
 }
 
 .period-selector select {
-    padding: 10px 12px;
+    padding: 12px 16px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    min-width: 180px;
+    min-width: 200px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.period-selector select:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.period-selector select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.period-selector select option {
+    background: #2a2d47;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
 }
 
 .periodo-personalizado {
     display: none;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
     margin-left: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.periodo-personalizado.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .periodo-personalizado input {
-    padding: 10px 12px;
+    padding: 12px 16px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.1);
     color: white;
+    font-size: 14px;
+    min-width: 150px;
+    transition: all 0.2s ease;
+}
+
+.periodo-personalizado input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.periodo-personalizado span {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .periodo-personalizado span {
@@ -2117,44 +2158,6 @@ body {
 .summary-label {
     color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
-}
-
-.charts-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.chart-card {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 20px;
-}
-
-.chart-card h3 {
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.chart-placeholder {
-    height: 250px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.6);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-}
-
-.chart-placeholder i {
-    font-size: 48px;
-    margin-bottom: 10px;
 }
 
 .top-lists {
@@ -2259,10 +2262,6 @@ body {
 @media (max-width: 1200px) {
     .search-filters {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .charts-container {
-        grid-template-columns: 1fr;
     }
 }
 
