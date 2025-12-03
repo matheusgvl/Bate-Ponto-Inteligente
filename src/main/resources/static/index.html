@@ -96,10 +96,6 @@
                                 <i class="fas fa-list"></i>
                                 <span>Listar</span>
                             </a>
-                            <a href="#" class="nav-subitem" data-section="gerenciar-acesso-local">
-                                <i class="fas fa-user-cog"></i>
-                                <span>Gerenciar Acesso</span>
-                            </a>
                         </div>
                     </div>
                     <div class="nav-item-dropdown">
@@ -494,59 +490,6 @@
                 </div>
             </div>
 
-            <div class="gerenciar-acesso-local-panel" id="gerenciarAcessoLocalPanel" style="display: none;">
-                <div class="panel-header">
-                    <h2><i class="fas fa-user-cog"></i> Gerenciar Acesso aos Locais</h2>
-                    <p class="panel-subtitle">Vincule pessoas aos locais para controlar acessos</p>
-                </div>
-
-                <div class="gerenciar-acesso-container">
-                    <div class="acesso-form-container">
-                        <form id="gerenciarAcessoForm" class="cadastro-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="localSelecionado">
-                                        <i class="fas fa-building"></i> Selecione o Local
-                                    </label>
-                                    <select id="localSelecionado" name="localId" required>
-                                        <option value="">Carregando locais...</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="pessoaSelecionada">
-                                        <i class="fas fa-user"></i> Selecione a Pessoa
-                                    </label>
-                                    <select id="pessoaSelecionada" name="pessoaId" required>
-                                        <option value="">Carregando pessoas...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" class="btn-secondary" id="btnCancelarAcesso">
-                                    <i class="fas fa-times"></i> Cancelar
-                                </button>
-                                
-                                <button type="submit" class="btn-primary" id="btnVincularAcesso">
-                                    <i class="fas fa-link"></i> Vincular Acesso
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <div class="acessos-vinculados">
-                        <h3><i class="fas fa-list-ul"></i> Acessos Vinculados</h3>
-                        <div class="acessos-grid" id="acessosGrid">
-                            <div class="loading-state">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <p>Carregando acessos...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="listagem-pessoas-panel" id="listagemPessoasPanel" style="display: none;">
                 <div class="panel-header">
                     <h2><i class="fas fa-list"></i> Pessoas Cadastradas</h2>
@@ -694,10 +637,6 @@
                             <span>até</span>
                             <input type="date" id="dataFim" name="dataFim">
                         </div>
-                        
-                        <button class="btn-primary" onclick="exportarRelatorio()">
-                            <i class="fas fa-download"></i> Exportar PDF
-                        </button>
                     </div>
                     
                     <div class="stats-summary">
@@ -738,24 +677,6 @@
                             <div class="summary-content">
                                 <div class="summary-number" id="totalLocaisAcessados">0</div>
                                 <div class="summary-label">Locais Acessados</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="charts-container">
-                        <div class="chart-card">
-                            <h3><i class="fas fa-chart-line"></i> Acessos por Dia</h3>
-                            <div class="chart-placeholder" id="chartAcessosPorDia">
-                                <i class="fas fa-chart-line"></i>
-                                <p>Gráfico será carregado aqui</p>
-                            </div>
-                        </div>
-                        
-                        <div class="chart-card">
-                            <h3><i class="fas fa-chart-pie"></i> Acessos por Local</h3>
-                            <div class="chart-placeholder" id="chartAcessosPorLocal">
-                                <i class="fas fa-chart-pie"></i>
-                                <p>Gráfico será carregado aqui</p>
                             </div>
                         </div>
                     </div>
@@ -826,7 +747,6 @@
         </div>
     </div>
 
-    <!-- Modal de Edição de Local -->
     <div class="modal-overlay" id="editLocalModalOverlay">
         <div class="modal">
             <div class="modal-header">

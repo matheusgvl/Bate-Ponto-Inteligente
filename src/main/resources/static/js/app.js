@@ -211,7 +211,6 @@ function showSection(section) {
     const listagemPessoasPanel = document.getElementById('listagemPessoasPanel');
     const cadastroLocalPanel = document.getElementById('cadastroLocalPanel');
     const listagemLocaisPanel = document.getElementById('listagemLocaisPanel');
-    const gerenciarAcessoLocalPanel = document.getElementById('gerenciarAcessoLocalPanel');
     const visualizarLogsPanel = document.getElementById('visualizarLogsPanel');
     const relatorioAcessosPanel = document.getElementById('relatorioAcessosPanel');
 
@@ -220,7 +219,6 @@ function showSection(section) {
     if (listagemPessoasPanel) listagemPessoasPanel.style.display = 'none';
     if (cadastroLocalPanel) cadastroLocalPanel.style.display = 'none';
     if (listagemLocaisPanel) listagemLocaisPanel.style.display = 'none';
-    if (gerenciarAcessoLocalPanel) gerenciarAcessoLocalPanel.style.display = 'none';
     if (visualizarLogsPanel) visualizarLogsPanel.style.display = 'none';
     if (relatorioAcessosPanel) relatorioAcessosPanel.style.display = 'none';
 
@@ -239,11 +237,6 @@ function showSection(section) {
         if (listagemLocaisPanel) {
             listagemLocaisPanel.style.display = 'block';
             carregarListaLocais();
-        }
-    } else if (section === 'gerenciar-acesso-local') {
-        if (gerenciarAcessoLocalPanel) {
-            gerenciarAcessoLocalPanel.style.display = 'block';
-            carregarOpcoesGerenciamento();
         }
     } else if (section === 'visualizar-logs') {
         if (visualizarLogsPanel) {
@@ -623,8 +616,8 @@ async function savePersonData(personData) {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        id: pessoaSalva.id, // O ID real do banco
-                        encoding: JSON.stringify(tempFaceEncoding) // O rosto que estava na memória
+                        id: pessoaSalva.id,
+                        encoding: JSON.stringify(tempFaceEncoding)
                     })
                 });
             }
@@ -638,7 +631,7 @@ async function savePersonData(personData) {
                     class: 'modal-btn-primary',
                     action: () => {
                         document.getElementById('cadastroPessoaForm').reset();
-                        tempFaceEncoding = null; // IMPORTANTE: Limpa a memória para o próximo cadastro
+                        tempFaceEncoding = null;
 
                         const cardInput = document.getElementById('cardUID');
                         if(cardInput) cardInput.value = '';
@@ -774,7 +767,6 @@ async function captureFaceData(nome) {
         setTimeout(() => {
             clearInterval(checkInterval);
             if (!tempFaceEncoding) {
-                // Avisa o Python para parar de tentar
                 fetch('/api/person/face/stop', {method: 'POST'}).catch(() => {});
 
                 showModal(
@@ -1075,14 +1067,12 @@ function setupLocalForm() {
             const formData = new FormData(localForm);
             const localData = {};
 
-            // Processar campos normais
             for (let [key, value] of formData.entries()) {
                 if (key !== 'funcoesAutorizadas') {
                     localData[key] = value.trim();
                 }
             }
 
-            // Processar funções autorizadas (checkboxes)
             const funcoesCheckboxes = document.querySelectorAll('input[name="funcoesAutorizadas"]:checked');
             localData.funcoesAutorizadas = Array.from(funcoesCheckboxes).map(checkbox => checkbox.value);
 
@@ -1266,7 +1256,6 @@ function renderizarLocais(locais) {
                 'ALTO': '#f56565'
             }[local.nivelRestricao] || '#667eea';
             
-            // Formatação das funções autorizadas
             const funcoesFormatadas = (local.funcoesAutorizadas || []).map(funcao => {
                 return funcao.charAt(0).toUpperCase() + funcao.slice(1).toLowerCase();
             }).join(', ') || 'Nenhuma função definida';
@@ -1340,23 +1329,19 @@ function renderizarLocais(locais) {
 }
 
 function editarLocal(id) {
-    // Buscar os dados do local
     fetch(`/api/local/${id}`)
         .then(response => response.json())
         .then(local => {
-            // Preencher o formulário de edição
             document.getElementById('editLocalId').value = local.id;
             document.getElementById('editNomeLocal').value = local.nome;
             document.getElementById('editDescricaoLocal').value = local.descricao;
             document.getElementById('editNivelRestricao').value = local.nivelRestricao;
             document.getElementById('editCapacidadeMaxima').value = local.capacidadeMaxima;
             
-            // Limpar checkboxes
             document.querySelectorAll('#editFuncoesAutorizadas input[type="checkbox"]').forEach(checkbox => {
                 checkbox.checked = false;
             });
             
-            // Marcar funções autorizadas
             if (local.funcoesAutorizadas && local.funcoesAutorizadas.length > 0) {
                 local.funcoesAutorizadas.forEach(funcao => {
                     const checkbox = document.getElementById(`edit_funcao_${funcao}`);
@@ -1366,7 +1351,6 @@ function editarLocal(id) {
                 });
             }
             
-            // Mostrar modal
             document.getElementById('editLocalModalOverlay').classList.add('active');
         })
         .catch(error => {
@@ -1388,7 +1372,6 @@ function closeEditLocalModal() {
     document.getElementById('editLocalModalOverlay').classList.remove('active');
 }
 
-// Configurar o formulário de edição
 document.addEventListener('DOMContentLoaded', function() {
     const editLocalForm = document.getElementById('editLocalForm');
     if (editLocalForm) {
@@ -1398,14 +1381,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(editLocalForm);
             const localData = {};
             
-            // Processar campos normais
             for (let [key, value] of formData.entries()) {
                 if (key !== 'funcoesAutorizadas') {
                     localData[key] = value.trim();
                 }
             }
             
-            // Processar funções autorizadas (checkboxes)
             const funcoesCheckboxes = document.querySelectorAll('#editFuncoesAutorizadas input[name="funcoesAutorizadas"]:checked');
             localData.funcoesAutorizadas = Array.from(funcoesCheckboxes).map(checkbox => checkbox.value);
             
@@ -1461,7 +1442,7 @@ async function updateLocalData(localData) {
                     action: () => {
                         closeEditLocalModal();
                         closeModal();
-                        carregarListaLocais(); // Recarregar a lista
+                        carregarListaLocais();
                     }
                 }]
             );
@@ -1548,324 +1529,6 @@ function excluirLocal(id, nome) {
     );
 }
 
-// ===== FUNÇÕES DE GERENCIAMENTO DE ACESSO =====
-
-async function carregarOpcoesGerenciamento() {
-    await carregarLocaisParaSelect();
-    await carregarPessoasParaSelect();
-    setupGerenciarAcessoForm();
-    carregarAcessosVinculados();
-}
-
-async function carregarLocaisParaSelect() {
-    const localSelect = document.getElementById('localSelectGerenciar');
-    if (!localSelect) return;
-
-    localSelect.innerHTML = '<option value="">Carregando locais...</option>';
-
-    try {
-        const response = await fetch('/api/local/list', {
-            method: 'GET',
-            cache: 'no-cache',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Falha ao buscar locais');
-        }
-
-        const locais = await response.json();
-        
-        localSelect.innerHTML = '<option value="">Selecione um local</option>';
-        locais.forEach(local => {
-            const option = document.createElement('option');
-            option.value = local.id;
-            option.textContent = `${local.nome} - ${local.nivelRestricao}`;
-            localSelect.appendChild(option);
-        });
-
-    } catch (error) {
-        console.error('Erro ao carregar locais:', error);
-        localSelect.innerHTML = '<option value="">Erro ao carregar locais</option>';
-    }
-}
-
-async function carregarPessoasParaSelect() {
-    const pessoaSelect = document.getElementById('pessoaSelectGerenciar');
-    if (!pessoaSelect) return;
-
-    pessoaSelect.innerHTML = '<option value="">Carregando pessoas...</option>';
-
-    try {
-        const response = await fetch('/api/person/list', {
-            method: 'GET',
-            cache: 'no-cache',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Falha ao buscar pessoas');
-        }
-
-        const pessoas = await response.json();
-        
-        pessoaSelect.innerHTML = '<option value="">Selecione uma pessoa</option>';
-        pessoas.forEach(pessoa => {
-            const option = document.createElement('option');
-            option.value = pessoa.id;
-            option.textContent = `${pessoa.nome} - ${pessoa.funcao}`;
-            pessoaSelect.appendChild(option);
-        });
-
-    } catch (error) {
-        console.error('Erro ao carregar pessoas:', error);
-        pessoaSelect.innerHTML = '<option value="">Erro ao carregar pessoas</option>';
-    }
-}
-
-function setupGerenciarAcessoForm() {
-    const localSelect = document.getElementById('localSelectGerenciar');
-    const btnVincular = document.getElementById('btnVincularAcesso');
-    const btnRemover = document.getElementById('btnRemoverAcesso');
-
-    if (localSelect) {
-        localSelect.addEventListener('change', function() {
-            const localId = this.value;
-            if (localId) {
-                carregarAcessosDoLocal(localId);
-            } else {
-                limparListaAcessos();
-            }
-        });
-    }
-
-    if (btnVincular) {
-        btnVincular.addEventListener('click', vincularAcesso);
-    }
-
-    if (btnRemover) {
-        btnRemover.addEventListener('click', removerAcessoSelecionado);
-    }
-}
-
-async function carregarAcessosVinculados() {
-    const localSelect = document.getElementById('localSelectGerenciar');
-    if (localSelect && localSelect.value) {
-        await carregarAcessosDoLocal(localSelect.value);
-    } else {
-        limparListaAcessos();
-    }
-}
-
-async function carregarAcessosDoLocal(localId) {
-    const acessosList = document.getElementById('acessosVinculadosList');
-    if (!acessosList) return;
-
-    acessosList.innerHTML = `
-        <div class="loading-item">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Carregando acessos...</span>
-        </div>
-    `;
-
-    try {
-        const response = await fetch(`/api/local/${localId}/acessos`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Falha ao buscar acessos');
-        }
-
-        const pessoas = await response.json();
-        renderizarAcessosVinculados(pessoas);
-
-    } catch (error) {
-        console.error('Erro ao carregar acessos:', error);
-        acessosList.innerHTML = `
-            <div class="error-item">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>Erro ao carregar acessos</span>
-            </div>
-        `;
-    }
-}
-
-function renderizarAcessosVinculados(pessoas) {
-    const acessosList = document.getElementById('acessosVinculadosList');
-    if (!acessosList) return;
-
-    if (pessoas.length === 0) {
-        acessosList.innerHTML = `
-            <div class="empty-item">
-                <i class="fas fa-users"></i>
-                <span>Nenhuma pessoa vinculada a este local</span>
-            </div>
-        `;
-        return;
-    }
-
-    acessosList.innerHTML = '';
-    pessoas.forEach(pessoa => {
-        const item = document.createElement('div');
-        item.className = 'acesso-item';
-        item.innerHTML = `
-            <div class="acesso-info">
-                <div class="acesso-avatar">${pessoa.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}</div>
-                <div class="acesso-details">
-                    <span class="acesso-nome">${pessoa.nome}</span>
-                    <span class="acesso-funcao">${pessoa.funcao}</span>
-                </div>
-            </div>
-            <button class="acesso-remove-btn" onclick="removerAcesso(${pessoa.id})" title="Remover acesso">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        acessosList.appendChild(item);
-    });
-}
-
-function limparListaAcessos() {
-    const acessosList = document.getElementById('acessosVinculadosList');
-    if (acessosList) {
-        acessosList.innerHTML = `
-            <div class="empty-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Selecione um local para ver os acessos</span>
-            </div>
-        `;
-    }
-}
-
-async function vincularAcesso() {
-    const localSelect = document.getElementById('localSelectGerenciar');
-    const pessoaSelect = document.getElementById('pessoaSelectGerenciar');
-
-    const localId = localSelect?.value;
-    const pessoaId = pessoaSelect?.value;
-
-    if (!localId || !pessoaId) {
-        showModal(
-            'Seleção Incompleta',
-            'Por favor, selecione tanto o local quanto a pessoa.',
-            'fas fa-exclamation-triangle',
-            [{
-                text: 'OK',
-                class: 'modal-btn-primary',
-                action: closeModal
-            }]
-        );
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/acesso/vincular', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                localId: parseInt(localId),
-                pessoaId: parseInt(pessoaId)
-            })
-        });
-
-        if (response.ok) {
-            showModal(
-                'Sucesso!',
-                'Acesso vinculado com sucesso!',
-                'fas fa-check-circle',
-                [{
-                    text: 'OK',
-                    class: 'modal-btn-primary',
-                    action: () => {
-                        closeModal();
-                        pessoaSelect.value = '';
-                        carregarAcessosDoLocal(localId);
-                    }
-                }]
-            );
-        } else {
-            const error = await response.json();
-            throw new Error(error.message || 'Erro ao vincular acesso');
-        }
-
-    } catch (error) {
-        console.error('Erro ao vincular acesso:', error);
-        showModal(
-            'Erro',
-            'Não foi possível vincular o acesso: ' + error.message,
-            'fas fa-exclamation-triangle',
-            [{
-                text: 'OK',
-                class: 'modal-btn-primary',
-                action: closeModal
-            }]
-        );
-    }
-}
-
-async function removerAcesso(pessoaId) {
-    const localSelect = document.getElementById('localSelectGerenciar');
-    const localId = localSelect?.value;
-
-    if (!localId) return;
-
-    try {
-        const response = await fetch('/api/acesso/desvincular', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                localId: parseInt(localId),
-                pessoaId: parseInt(pessoaId)
-            })
-        });
-
-        if (response.ok) {
-            carregarAcessosDoLocal(localId);
-        } else {
-            const error = await response.json();
-            throw new Error(error.message || 'Erro ao remover acesso');
-        }
-
-    } catch (error) {
-        console.error('Erro ao remover acesso:', error);
-        showModal(
-            'Erro',
-            'Não foi possível remover o acesso: ' + error.message,
-            'fas fa-exclamation-triangle',
-            [{
-                text: 'OK',
-                class: 'modal-btn-primary',
-                action: closeModal
-            }]
-        );
-    }
-}
-
-function removerAcessoSelecionado() {
-    showModal(
-        'Informação',
-        'Para remover um acesso, clique no botão X ao lado da pessoa na lista.',
-        'fas fa-info-circle',
-        [{
-            text: 'OK',
-            class: 'modal-btn-primary',
-            action: closeModal
-        }]
-    );
-}
-
-// ===== FUNÇÕES DE LOG DE ACESSO =====
 
 let currentPage = 0;
 let currentSize = 10;
@@ -2015,18 +1678,15 @@ function atualizarPaginacao(result) {
     const btnNext = document.getElementById('btnNextPage');
     const pageNumbers = document.getElementById('pageNumbers');
     
-    // Atualizar informações
     const total = result.totalElements;
     const inicio = (result.number * result.size) + 1;
     const fim = Math.min((result.number + 1) * result.size, total);
     
     info.textContent = `Mostrando ${inicio} a ${fim} de ${total} registros`;
     
-    // Atualizar botões
     btnPrev.disabled = result.first;
     btnNext.disabled = result.last;
     
-    // Atualizar números das páginas
     const currentPage = result.number + 1;
     const totalPages = result.totalPages;
     pageNumbers.textContent = `${currentPage} de ${totalPages}`;
@@ -2062,8 +1722,6 @@ function verDetalhesLog(logId) {
         }]
     );
 }
-
-// ===== FUNÇÕES DE RELATÓRIO =====
 
 async function gerarRelatorio() {
     try {
@@ -2102,16 +1760,13 @@ async function gerarRelatorio() {
 }
 
 function exibirRelatorio(relatorio) {
-    // Atualizar cards de resumo
     document.getElementById('totalAcessosPermitidos').textContent = relatorio.acessosPermitidos || 0;
     document.getElementById('totalAcessosNegados').textContent = relatorio.acessosNegados || 0;
     document.getElementById('totalPessoasUnicas').textContent = relatorio.pessoasUnicas || 0;
     document.getElementById('totalLocaisAcessados').textContent = relatorio.locaisAcessados || 0;
     
-    // Exibir top pessoas
     exibirTopPessoas(relatorio.topPessoas || {});
     
-    // Exibir top locais
     exibirTopLocais(relatorio.topLocais || {});
 }
 
@@ -2163,20 +1818,6 @@ function exibirTopLocais(topLocais) {
     `).join('');
 }
 
-function exportarRelatorio() {
-    showModal(
-        'Exportar Relatório',
-        'Funcionalidade de exportação será implementada em breve.',
-        'fas fa-download',
-        [{
-            text: 'OK',
-            class: 'modal-btn-primary',
-            action: closeModal
-        }]
-    );
-}
-
-// Event listeners para o período personalizado
 document.addEventListener('DOMContentLoaded', function() {
     const periodoSelect = document.getElementById('periodoRelatorio');
     const periodoPersonalizado = document.getElementById('periodoPersonalizado');
@@ -2185,8 +1826,20 @@ document.addEventListener('DOMContentLoaded', function() {
         periodoSelect.addEventListener('change', function() {
             if (this.value === 'personalizado') {
                 periodoPersonalizado.style.display = 'flex';
+                periodoPersonalizado.classList.add('show');
+                
+                setTimeout(() => {
+                    periodoPersonalizado.style.opacity = '1';
+                    periodoPersonalizado.style.transform = 'translateY(0)';
+                }, 10);
             } else {
-                periodoPersonalizado.style.display = 'none';
+                periodoPersonalizado.style.opacity = '0';
+                periodoPersonalizado.style.transform = 'translateY(-10px)';
+                periodoPersonalizado.classList.remove('show');
+                
+                setTimeout(() => {
+                    periodoPersonalizado.style.display = 'none';
+                }, 200);
             }
         });
     }
