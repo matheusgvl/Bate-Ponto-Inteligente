@@ -845,6 +845,94 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="editPersonModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="editPersonModalTitle"><i class="fas fa-edit"></i> Editar Pessoa</h3>
+                <button class="modal-close" onclick="closeEditPersonModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editPersonForm" class="cadastro-form">
+                    <input type="hidden" id="editPersonId" name="id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editNomePessoa">
+                                <i class="fas fa-user"></i> Nome Completo
+                            </label>
+                            <input type="text" id="editNomePessoa" name="nome" placeholder="Digite o nome completo" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCpfPessoa">
+                                <i class="fas fa-id-card"></i> CPF
+                            </label>
+                            <input type="text" id="editCpfPessoa" name="cpf" placeholder="000.000.000-00" readonly>
+                            <small>O CPF não pode ser alterado após o cadastro</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editRgPessoa">
+                                <i class="fas fa-address-card"></i> RG
+                            </label>
+                            <input type="text" id="editRgPessoa" name="rg" placeholder="Digite o RG" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDataNascimento">
+                                <i class="fas fa-calendar-alt"></i> Data de Nascimento
+                            </label>
+                            <input type="date" id="editDataNascimento" name="dataNascimento" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editFuncaoPessoa">
+                                <i class="fas fa-briefcase"></i> Função
+                            </label>
+                            <select id="editFuncaoPessoa" name="funcao" required>
+                                <option value="">Selecione a função</option>
+                                <option value="GERENTE">Gerente</option>
+                                <option value="FUNCIONARIO">Funcionário</option>
+                                <option value="TERCEIRIZADO">Terceirizado</option>
+                                <option value="VISITANTE">Visitante</option>
+                                <option value="MANUTENCAO">Manutenção</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCardUIDPessoa">
+                                <i class="fas fa-credit-card"></i> Cartão NFC
+                            </label>
+                            <div class="card-input-group">
+                                <input type="text" id="editCardUIDPessoa" name="cardUID" placeholder="UID do cartão" readonly>
+                                <button type="button" id="btnAlterarCartao" class="btn-secondary">
+                                    <i class="fas fa-credit-card"></i> Alterar Cartão
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditPersonModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="js/app.js"></script>
 </body>
 </html>

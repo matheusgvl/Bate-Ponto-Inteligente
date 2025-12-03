@@ -818,6 +818,8 @@ async function carregarEstatisticas() {
         document.getElementById('stat-acessos-hoje').textContent = stats.acessosHoje;
         document.getElementById('stat-acessos-negados').textContent = stats.acessosNegados;
         document.getElementById('stat-alertas-criticos').textContent = 0;
+        
+        carregarAreasRestritas();
 
     } catch (error) {
         console.error('Falha ao carregar estatísticas:', error);
@@ -988,16 +990,36 @@ function formatarData(dataString) {
 }
 
 function editarPessoa(id) {
-    showModal(
-        'Editar Pessoa',
-        'Funcionalidade em desenvolvimento.',
-        'fas fa-info-circle',
-        [{
-            text: 'OK',
-            class: 'modal-btn-primary',
-            action: closeModal
-        }]
-    );
+    fetch(`/api/person/${id}`)
+        .then(response => response.json())
+        .then(pessoa => {
+            document.getElementById('editPersonId').value = pessoa.id;
+            document.getElementById('editNomePessoa').value = pessoa.nome;
+            document.getElementById('editCpfPessoa').value = pessoa.cpf;
+            document.getElementById('editRgPessoa').value = pessoa.rg;
+            document.getElementById('editDataNascimento').value = pessoa.dataNascimento;
+            document.getElementById('editFuncaoPessoa').value = pessoa.funcao;
+            document.getElementById('editCardUIDPessoa').value = pessoa.cardUID || '';
+            
+            document.getElementById('editPersonModalOverlay').classList.add('active');
+        })
+        .catch(error => {
+            console.error('Erro ao buscar dados da pessoa:', error);
+            showModal(
+                'Erro',
+                'Não foi possível carregar os dados da pessoa.',
+                'fas fa-exclamation-triangle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        });
+}
+
+function closeEditPersonModal() {
+    document.getElementById('editPersonModalOverlay').classList.remove('active');
 }
 
 function excluirPessoa(id, nome) {
@@ -1419,6 +1441,71 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    const editPersonForm = document.getElementById('editPersonForm');
+    if (editPersonForm) {
+        const editCpfInput = document.getElementById('editCpfPessoa');
+        if (editCpfInput) {
+            editCpfInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                }
+                e.target.value = value;
+            });
+        }
+        
+        editPersonForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(editPersonForm);
+            const personData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                personData[key] = value.trim();
+            }
+            
+            if (personData.nome && personData.rg && personData.dataNascimento && personData.funcao) {
+                if (!validateCPF(personData.cpf)) {
+                    showModal(
+                        'CPF Inválido',
+                        'CPF inválido detectado.',
+                        'fas fa-exclamation-triangle',
+                        [{
+                            text: 'OK',
+                            class: 'modal-btn-primary',
+                            action: closeModal
+                        }]
+                    );
+                } else {
+                    updatePersonData(personData);
+                }
+            } else {
+                showModal(
+                    'Dados Incompletos',
+                    'Por favor, preencha todos os campos obrigatórios.',
+                    'fas fa-exclamation-triangle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: closeModal
+                    }]
+                );
+            }
+        });
+    }
+    
+    const btnAlterarCartao = document.getElementById('btnAlterarCartao');
+    if (btnAlterarCartao) {
+        btnAlterarCartao.addEventListener('click', function() {
+            const personId = document.getElementById('editPersonId').value;
+            if (personId) {
+                startCardReadingForEdit(personId);
+            }
+        });
+    }
 });
 
 async function updateLocalData(localData) {
@@ -1472,6 +1559,163 @@ async function updateLocalData(localData) {
             }]
         );
     }
+}
+
+async function updatePersonData(personData) {
+    try {
+        const response = await fetch(`/api/person/${personData.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(personData)
+        });
+
+        if (response.ok) {
+            showModal(
+                'Sucesso!',
+                `Dados de "${personData.nome}" foram atualizados com sucesso!`,
+                'fas fa-check-circle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: () => {
+                        closeEditPersonModal();
+                        closeModal();
+                        carregarListaPessoas();
+                        carregarEstatisticas();
+                    }
+                }]
+            );
+        } else {
+            const error = await response.json();
+            showModal(
+                'Erro ao Atualizar',
+                error.message || 'Erro ao atualizar a pessoa.',
+                'fas fa-exclamation-triangle',
+                [{
+                    text: 'OK',
+                    class: 'modal-btn-primary',
+                    action: closeModal
+                }]
+            );
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar pessoa:', error);
+        showModal(
+            'Erro de Conexão',
+            'Erro de conexão com o servidor.',
+            'fas fa-exclamation-triangle',
+            [{
+                text: 'OK',
+                class: 'modal-btn-primary',
+                action: closeModal
+            }]
+        );
+    }
+}
+
+function startCardReadingForEdit(personId) {
+    showModal(
+        'Aguardando Novo Cartão NFC',
+        'Aproxime o novo cartão do leitor para alterar...',
+        'fas fa-credit-card',
+        [
+            {
+                text: 'Cancelar',
+                class: 'modal-btn-secondary',
+                action: () => {
+                    stopCardReading();
+                    closeModal();
+                }
+            }
+        ]
+    );
+
+    const modalIcon = document.querySelector('.modal-icon i');
+    modalIcon.className = 'fas fa-credit-card';
+    modalIcon.parentElement.style.animation = 'modalPulse 1s infinite';
+
+    readCardUIDForEdit(personId);
+}
+
+async function readCardUIDForEdit(personId) {
+    try {
+        console.log('Iniciando leitura do novo cartão NFC...');
+
+        const response = await fetch('/api/person/card/read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Resposta do servidor:', response.status);
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Dados recebidos:', data);
+
+            if (data.success && data.uid) {
+                console.log('Novo cartão detectado com sucesso:', data.uid);
+                handleNewCardDetected(data.uid, personId);
+            } else {
+                console.error('Erro na leitura:', data.error || 'Erro desconhecido');
+                showCardError(data.error || 'Erro ao ler cartão. Tente novamente.');
+            }
+        } else {
+            console.error('Erro HTTP:', response.status);
+            showCardError('Erro na comunicação com o leitor.');
+        }
+    } catch (error) {
+        console.error('Erro ao ler cartão:', error);
+        showCardError('Erro de conexão com o leitor.');
+    }
+}
+
+function handleNewCardDetected(uid, personId) {
+    if (!uid.startsWith('63DF') && !uid.startsWith('A979') &&
+        !uid.startsWith('63df') && !uid.startsWith('a979')) {
+        showModal(
+            'Cartão Inválido',
+            `Cartão não reconhecido. UID: ${uid}\nApenas cartões com UID iniciado em 63DF ou A979 são aceitos.`,
+            'fas fa-exclamation-triangle',
+            [
+                {
+                    text: 'Tentar Novamente',
+                    class: 'modal-btn-primary',
+                    action: () => startCardReadingForEdit(personId)
+                },
+                {
+                    text: 'Cancelar',
+                    class: 'modal-btn-secondary',
+                    action: closeModal
+                }
+            ]
+        );
+        return;
+    }
+
+    showModal(
+        'Novo Cartão Detectado!',
+        `UID do novo cartão: ${uid}\n\nDeseja alterar para este cartão?`,
+        'fas fa-check-circle',
+        [
+            {
+                text: 'Não, tentar outro',
+                class: 'modal-btn-secondary',
+                action: () => startCardReadingForEdit(personId)
+            },
+            {
+                text: 'Sim, alterar',
+                class: 'modal-btn-primary',
+                action: () => {
+                    document.getElementById('editCardUIDPessoa').value = uid;
+                    closeModal();
+                }
+            }
+        ]
+    );
 }
 
 function excluirLocal(id, nome) {
@@ -1529,12 +1773,7 @@ function excluirLocal(id, nome) {
     );
 }
 
-
-let currentPage = 0;
-let currentSize = 10;
-let currentFilters = {};
-
-function carregarFiltrosLogs() {
+async function carregarFiltrosLogs() {
     carregarPessoasParaFiltro();
     carregarLocaisParaFiltro();
 }
@@ -1843,4 +2082,87 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    carregarAreasRestritas();
 });
+
+async function carregarAreasRestritas() {
+    try {
+        const response = await fetch('/api/local/list', {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Falha ao buscar áreas: ${response.status}`);
+        }
+
+        const locais = await response.json();
+        renderizarAreasRestritas(locais);
+
+    } catch (error) {
+        console.error('Erro ao carregar áreas restritas:', error);
+        renderizarAreasRestritas([]);
+    }
+}
+
+function renderizarAreasRestritas(locais) {
+    const areasSection = document.querySelector('.areas-section');
+    const sectionSubtitle = areasSection.querySelector('.section-subtitle');
+    
+    // Atualizar contador
+    sectionSubtitle.textContent = `${locais.length} áreas monitoradas`;
+    
+    // Remover estado vazio ou lista existente
+    const existingContent = areasSection.querySelector('.empty-state, .areas-list');
+    if (existingContent) {
+        existingContent.remove();
+    }
+    
+    if (locais.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.innerHTML = `
+            <i class="fas fa-inbox"></i>
+            <h4>Nenhuma área configurada</h4>
+            <p>Sistema novo sem dados cadastrados</p>
+        `;
+        areasSection.appendChild(emptyState);
+        return;
+    }
+    
+    // Criar lista de áreas
+    const areasList = document.createElement('div');
+    areasList.className = 'areas-list';
+    
+    locais.forEach(local => {
+        const nivelCor = {
+            'BAIXO': '#48bb78',
+            'MEDIO': '#ed8936', 
+            'ALTO': '#f56565'
+        };
+        
+        const areaItem = document.createElement('div');
+        areaItem.className = 'area-item';
+        areaItem.innerHTML = `
+            <div class="area-info">
+                <div class="area-name">${local.nome}</div>
+                <div class="area-details">
+                    <span class="area-restriction" style="color: ${nivelCor[local.nivelRestricao]}">
+                        ${local.nivelRestricao}
+                    </span>
+                    <span class="area-capacity">${local.capacidadeMaxima} pessoas</span>
+                </div>
+            </div>
+            <div class="area-status">
+                <span class="status-active">Monitorando</span>
+            </div>
+        `;
+        areasList.appendChild(areaItem);
+    });
+    
+    areasSection.appendChild(areasList);
+}
