@@ -1180,7 +1180,6 @@ body {
     font-style: italic;
 }
 
-/* Estilos para exibição das funções autorizadas nos cards */
 .funcoes-autorizadas {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.8);
@@ -1238,7 +1237,6 @@ body {
     font-weight: 600;
 }
 
-/* Responsivo para checkboxes em telas menores */
 @media (max-width: 768px) {
     .checkbox-group,
     #editLocalModalOverlay .checkbox-group {
@@ -1258,7 +1256,6 @@ body {
         margin: 20px auto;
     }
     
-    /* Responsivo para período personalizado */
     .periodo-personalizado {
         margin-left: 0;
         margin-top: 15px;
@@ -1793,8 +1790,6 @@ body {
     }
 }
 
-/* ===== ESTILOS PARA LOG DE ACESSO ===== */
-
 .visualizar-logs-panel,
 .relatorio-acessos-panel {
     background: rgba(255, 255, 255, 0.05);
@@ -2012,8 +2007,6 @@ body {
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
 }
-
-/* ===== ESTILOS PARA RELATÓRIO ===== */
 
 .relatorio-header {
     display: flex;
@@ -2256,8 +2249,6 @@ body {
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
 }
-
-/* ===== RESPONSIVIDADE PARA LOGS ===== */
 
 @media (max-width: 1200px) {
     .search-filters {

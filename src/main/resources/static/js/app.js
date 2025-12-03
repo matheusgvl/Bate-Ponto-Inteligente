@@ -616,8 +616,8 @@ async function savePersonData(personData) {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        id: pessoaSalva.id, // O ID real do banco
-                        encoding: JSON.stringify(tempFaceEncoding) // O rosto que estava na memória
+                        id: pessoaSalva.id,
+                        encoding: JSON.stringify(tempFaceEncoding)
                     })
                 });
             }
@@ -631,7 +631,7 @@ async function savePersonData(personData) {
                     class: 'modal-btn-primary',
                     action: () => {
                         document.getElementById('cadastroPessoaForm').reset();
-                        tempFaceEncoding = null; // IMPORTANTE: Limpa a memória para o próximo cadastro
+                        tempFaceEncoding = null;
 
                         const cardInput = document.getElementById('cardUID');
                         if(cardInput) cardInput.value = '';
@@ -767,7 +767,6 @@ async function captureFaceData(nome) {
         setTimeout(() => {
             clearInterval(checkInterval);
             if (!tempFaceEncoding) {
-                // Avisa o Python para parar de tentar
                 fetch('/api/person/face/stop', {method: 'POST'}).catch(() => {});
 
                 showModal(
@@ -1068,14 +1067,12 @@ function setupLocalForm() {
             const formData = new FormData(localForm);
             const localData = {};
 
-            // Processar campos normais
             for (let [key, value] of formData.entries()) {
                 if (key !== 'funcoesAutorizadas') {
                     localData[key] = value.trim();
                 }
             }
 
-            // Processar funções autorizadas (checkboxes)
             const funcoesCheckboxes = document.querySelectorAll('input[name="funcoesAutorizadas"]:checked');
             localData.funcoesAutorizadas = Array.from(funcoesCheckboxes).map(checkbox => checkbox.value);
 
@@ -1259,7 +1256,6 @@ function renderizarLocais(locais) {
                 'ALTO': '#f56565'
             }[local.nivelRestricao] || '#667eea';
             
-            // Formatação das funções autorizadas
             const funcoesFormatadas = (local.funcoesAutorizadas || []).map(funcao => {
                 return funcao.charAt(0).toUpperCase() + funcao.slice(1).toLowerCase();
             }).join(', ') || 'Nenhuma função definida';
@@ -1333,23 +1329,19 @@ function renderizarLocais(locais) {
 }
 
 function editarLocal(id) {
-    // Buscar os dados do local
     fetch(`/api/local/${id}`)
         .then(response => response.json())
         .then(local => {
-            // Preencher o formulário de edição
             document.getElementById('editLocalId').value = local.id;
             document.getElementById('editNomeLocal').value = local.nome;
             document.getElementById('editDescricaoLocal').value = local.descricao;
             document.getElementById('editNivelRestricao').value = local.nivelRestricao;
             document.getElementById('editCapacidadeMaxima').value = local.capacidadeMaxima;
             
-            // Limpar checkboxes
             document.querySelectorAll('#editFuncoesAutorizadas input[type="checkbox"]').forEach(checkbox => {
                 checkbox.checked = false;
             });
             
-            // Marcar funções autorizadas
             if (local.funcoesAutorizadas && local.funcoesAutorizadas.length > 0) {
                 local.funcoesAutorizadas.forEach(funcao => {
                     const checkbox = document.getElementById(`edit_funcao_${funcao}`);
@@ -1359,7 +1351,6 @@ function editarLocal(id) {
                 });
             }
             
-            // Mostrar modal
             document.getElementById('editLocalModalOverlay').classList.add('active');
         })
         .catch(error => {
@@ -1381,7 +1372,6 @@ function closeEditLocalModal() {
     document.getElementById('editLocalModalOverlay').classList.remove('active');
 }
 
-// Configurar o formulário de edição
 document.addEventListener('DOMContentLoaded', function() {
     const editLocalForm = document.getElementById('editLocalForm');
     if (editLocalForm) {
@@ -1391,14 +1381,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(editLocalForm);
             const localData = {};
             
-            // Processar campos normais
             for (let [key, value] of formData.entries()) {
                 if (key !== 'funcoesAutorizadas') {
                     localData[key] = value.trim();
                 }
             }
             
-            // Processar funções autorizadas (checkboxes)
             const funcoesCheckboxes = document.querySelectorAll('#editFuncoesAutorizadas input[name="funcoesAutorizadas"]:checked');
             localData.funcoesAutorizadas = Array.from(funcoesCheckboxes).map(checkbox => checkbox.value);
             
@@ -1454,7 +1442,7 @@ async function updateLocalData(localData) {
                     action: () => {
                         closeEditLocalModal();
                         closeModal();
-                        carregarListaLocais(); // Recarregar a lista
+                        carregarListaLocais();
                     }
                 }]
             );
@@ -1541,10 +1529,6 @@ function excluirLocal(id, nome) {
     );
 }
 
-// ===== FUNÇÕES DE GERENCIAMENTO DE ACESSO =====
-
-
-// ===== FUNÇÕES DE LOG DE ACESSO =====
 
 let currentPage = 0;
 let currentSize = 10;
@@ -1694,18 +1678,15 @@ function atualizarPaginacao(result) {
     const btnNext = document.getElementById('btnNextPage');
     const pageNumbers = document.getElementById('pageNumbers');
     
-    // Atualizar informações
     const total = result.totalElements;
     const inicio = (result.number * result.size) + 1;
     const fim = Math.min((result.number + 1) * result.size, total);
     
     info.textContent = `Mostrando ${inicio} a ${fim} de ${total} registros`;
     
-    // Atualizar botões
     btnPrev.disabled = result.first;
     btnNext.disabled = result.last;
     
-    // Atualizar números das páginas
     const currentPage = result.number + 1;
     const totalPages = result.totalPages;
     pageNumbers.textContent = `${currentPage} de ${totalPages}`;
@@ -1741,8 +1722,6 @@ function verDetalhesLog(logId) {
         }]
     );
 }
-
-// ===== FUNÇÕES DE RELATÓRIO =====
 
 async function gerarRelatorio() {
     try {
@@ -1781,16 +1760,13 @@ async function gerarRelatorio() {
 }
 
 function exibirRelatorio(relatorio) {
-    // Atualizar cards de resumo
     document.getElementById('totalAcessosPermitidos').textContent = relatorio.acessosPermitidos || 0;
     document.getElementById('totalAcessosNegados').textContent = relatorio.acessosNegados || 0;
     document.getElementById('totalPessoasUnicas').textContent = relatorio.pessoasUnicas || 0;
     document.getElementById('totalLocaisAcessados').textContent = relatorio.locaisAcessados || 0;
     
-    // Exibir top pessoas
     exibirTopPessoas(relatorio.topPessoas || {});
     
-    // Exibir top locais
     exibirTopLocais(relatorio.topLocais || {});
 }
 
@@ -1842,7 +1818,6 @@ function exibirTopLocais(topLocais) {
     `).join('');
 }
 
-// Event listeners para o período personalizado
 document.addEventListener('DOMContentLoaded', function() {
     const periodoSelect = document.getElementById('periodoRelatorio');
     const periodoPersonalizado = document.getElementById('periodoPersonalizado');
@@ -1853,7 +1828,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 periodoPersonalizado.style.display = 'flex';
                 periodoPersonalizado.classList.add('show');
                 
-                // Animar a entrada
                 setTimeout(() => {
                     periodoPersonalizado.style.opacity = '1';
                     periodoPersonalizado.style.transform = 'translateY(0)';
