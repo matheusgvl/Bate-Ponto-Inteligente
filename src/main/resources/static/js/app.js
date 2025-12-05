@@ -991,14 +991,21 @@ function formatarData(dataString) {
 
 function editarPessoa(id) {
     fetch(`/api/person/${id}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao buscar pessoa');
+            }
+            return response.json();
+        })
         .then(pessoa => {
-            document.getElementById('editPersonId').value = pessoa.id;
-            document.getElementById('editNomePessoa').value = pessoa.nome;
-            document.getElementById('editCpfPessoa').value = pessoa.cpf;
-            document.getElementById('editRgPessoa').value = pessoa.rg;
-            document.getElementById('editDataNascimento').value = pessoa.dataNascimento;
-            document.getElementById('editFuncaoPessoa').value = pessoa.funcao;
+            console.log('Dados da pessoa recebidos:', pessoa);
+            
+            document.getElementById('editPersonId').value = pessoa.id || '';
+            document.getElementById('editNomePessoa').value = pessoa.nome || '';
+            document.getElementById('editCpfPessoa').value = pessoa.cpf || '';
+            document.getElementById('editRgPessoa').value = pessoa.rg || '';
+            document.getElementById('editDataNascimento').value = pessoa.dataNascimento || '';
+            document.getElementById('editFuncaoPessoa').value = pessoa.funcao ? pessoa.funcao.toUpperCase() : '';
             document.getElementById('editCardUIDPessoa').value = pessoa.cardUID || '';
             
             document.getElementById('editPersonModalOverlay').classList.add('active');
@@ -2113,10 +2120,8 @@ function renderizarAreasRestritas(locais) {
     const areasSection = document.querySelector('.areas-section');
     const sectionSubtitle = areasSection.querySelector('.section-subtitle');
     
-    // Atualizar contador
     sectionSubtitle.textContent = `${locais.length} áreas monitoradas`;
     
-    // Remover estado vazio ou lista existente
     const existingContent = areasSection.querySelector('.empty-state, .areas-list');
     if (existingContent) {
         existingContent.remove();
@@ -2134,7 +2139,6 @@ function renderizarAreasRestritas(locais) {
         return;
     }
     
-    // Criar lista de áreas
     const areasList = document.createElement('div');
     areasList.className = 'areas-list';
     

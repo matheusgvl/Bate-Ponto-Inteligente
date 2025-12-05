@@ -1801,7 +1801,6 @@ body {
     opacity: 0.8;
 }
 
-/* Estilos para Visualizar Logs de Acesso */
 .visualizar-logs-panel {
     padding: 20px;
     margin-bottom: 30px;
@@ -2013,7 +2012,6 @@ body {
     padding: 0 10px;
 }
 
-/* Estilos para Relatório de Acessos */
 .relatorio-acessos-panel {
     padding: 20px;
     margin-bottom: 30px;

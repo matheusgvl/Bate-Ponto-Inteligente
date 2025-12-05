@@ -54,6 +54,12 @@ public class PessoaController {
         return ResponseEntity.ok(stats);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PessoaResponseDTO> buscarPorId(@PathVariable Long id) throws Exception {
+        PessoaResponseDTO pessoa = pessoaService.buscarDTOPorId(id);
+        return ResponseEntity.ok(pessoa);
+    }
+
     @GetMapping("/search/card/{uid}")
     public ResponseEntity<PessoaResponseDTO> buscarPorCartao(@PathVariable String uid) throws Exception {
         return ResponseEntity.ok(pessoaService.buscarDTOPorCartao(uid));
@@ -108,7 +114,6 @@ public class PessoaController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Nome é obrigatório"));
             }
 
-            // Chama o serviço Python para captura de rosto
             Map<String, Object> resultado = pessoaService.capturarRostoPython(nome);
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
