@@ -2013,6 +2013,313 @@ body {
     padding: 0 10px;
 }
 
+/* Estilos para Relatório de Acessos */
+.relatorio-acessos-panel {
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.relatorio-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+}
+
+.relatorio-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.period-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.period-selector label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+}
+
+.period-selector label i {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.period-selector select {
+    padding: 12px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+
+.period-selector select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.3);
+}
+
+.period-selector select option {
+    background: #2a2d47;
+    color: white;
+    padding: 12px;
+}
+
+.periodo-personalizado {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 20px;
+}
+
+.periodo-personalizado span {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.periodo-personalizado input[type="date"] {
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
+
+.periodo-personalizado input[type="date"]:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.3);
+}
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-number {
+    font-size: 28px;
+    font-weight: 300;
+    color: white;
+    margin-bottom: 5px;
+    line-height: 1;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+.top-lists {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.top-list-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.top-list-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.top-list-card h3 i {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.top-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.top-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.top-list-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateX(5px);
+}
+
+.top-list-rank {
+    width: 30px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.top-list-item:nth-child(1) .top-list-rank {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a202c;
+    box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+}
+
+.top-list-item:nth-child(2) .top-list-rank {
+    background: linear-gradient(135deg, #c0c0c0 0%, #e0e0e0 100%);
+    color: #1a202c;
+    box-shadow: 0 4px 10px rgba(192, 192, 192, 0.3);
+}
+
+.top-list-item:nth-child(3) .top-list-rank {
+    background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(205, 127, 50, 0.3);
+}
+
+.top-list-info {
+    flex: 1;
+    margin-left: 15px;
+}
+
+.top-list-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 3px;
+}
+
+.top-list-detail {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.top-list-count {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.top-list-number {
+    font-size: 20px;
+    font-weight: 600;
+    color: white;
+    line-height: 1;
+    margin-bottom: 3px;
+}
+
+.top-list-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.top-list .loading-state,
+.top-list .empty-state {
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.top-list .loading-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+    color: #667eea;
+}
+
+.top-list .loading-state p,
+.top-list .empty-state p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.top-list .empty-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.top-list .empty-state h4 {
+    font-size: 16px;
+    margin-bottom: 5px;
+    font-weight: 400;
+}
+
 @media (max-width: 1200px) {
     .search-filters {
         grid-template-columns: repeat(2, 1fr);
