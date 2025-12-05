@@ -112,6 +112,12 @@ public class PessoaService {
         return pessoaRepository.findById(id);
     }
     
+    public PessoaResponseDTO buscarDTOPorId(Long id) throws Exception {
+        Pessoa pessoa = this.buscarPorId(id)
+                .orElseThrow(() -> new Exception("Pessoa não encontrada com ID: " + id));
+        return new PessoaResponseDTO(pessoa);
+    }
+    
     public Optional<Pessoa> buscarPorCpf(String cpf) {
         return pessoaRepository.findByCpf(cpf);
     }

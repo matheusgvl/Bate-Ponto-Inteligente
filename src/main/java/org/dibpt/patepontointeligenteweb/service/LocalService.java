@@ -34,12 +34,11 @@ public class LocalService {
         local.setDescricao(dto.descricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
         
-        // Configurar nível de restrição
         if (dto.nivelRestricao() != null) {
             try {
                 local.setNivelRestricao(NivelRestricao.valueOf(dto.nivelRestricao().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                local.setNivelRestricao(NivelRestricao.BAIXO); // Valor padrão
+                local.setNivelRestricao(NivelRestricao.BAIXO);
             }
         }
         
@@ -64,12 +63,11 @@ public class LocalService {
         local.setDescricao(dto.descricao());
         local.setCapacidadeMaxima(dto.capacidadeMaxima());
         
-        // Configurar nível de restrição
         if (dto.nivelRestricao() != null) {
             try {
                 local.setNivelRestricao(NivelRestricao.valueOf(dto.nivelRestricao().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                local.setNivelRestricao(NivelRestricao.BAIXO); // Valor padrão
+                local.setNivelRestricao(NivelRestricao.BAIXO);
             }
         }
         
