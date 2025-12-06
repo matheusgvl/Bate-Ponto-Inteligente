@@ -162,6 +162,11 @@ public class PessoaService {
         Pessoa pessoa = pessoaExistente.get();
 
         String cpfLimpo = dto.cpf().replaceAll("[^\\d]", "");
+        
+        if (!validarCpf(cpfLimpo)) {
+            throw new Exception("CPF inválido");
+        }
+        
         if (!pessoa.getCpf().equals(cpfLimpo)) {
             if (pessoaRepository.existsByCpf(cpfLimpo)) {
                 throw new Exception("CPF já cadastrado no sistema");

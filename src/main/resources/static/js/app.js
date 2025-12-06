@@ -1526,20 +1526,23 @@ async function updateLocalData(localData) {
         });
 
         if (response.ok) {
-            showModal(
-                'Sucesso!',
-                `Local "${localData.nome}" foi atualizado com sucesso!`,
-                'fas fa-check-circle',
-                [{
-                    text: 'OK',
-                    class: 'modal-btn-primary',
-                    action: () => {
-                        closeEditLocalModal();
-                        closeModal();
-                        carregarListaLocais();
-                    }
-                }]
-            );
+            closeEditLocalModal();
+            
+            setTimeout(() => {
+                showModal(
+                    'Sucesso!',
+                    `Local "${localData.nome}" foi atualizado com sucesso!`,
+                    'fas fa-check-circle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: () => {
+                            closeModal();
+                            carregarListaLocais();
+                        }
+                    }]
+                );
+            }, 300);
         } else {
             const error = await response.json();
             showModal(
@@ -1570,7 +1573,7 @@ async function updateLocalData(localData) {
 
 async function updatePersonData(personData) {
     try {
-        const response = await fetch(`/api/person/${personData.id}`, {
+        const response = await fetch(`/api/person/update/${personData.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -1579,21 +1582,24 @@ async function updatePersonData(personData) {
         });
 
         if (response.ok) {
-            showModal(
-                'Sucesso!',
-                `Dados de "${personData.nome}" foram atualizados com sucesso!`,
-                'fas fa-check-circle',
-                [{
-                    text: 'OK',
-                    class: 'modal-btn-primary',
-                    action: () => {
-                        closeEditPersonModal();
-                        closeModal();
-                        carregarListaPessoas();
-                        carregarEstatisticas();
-                    }
-                }]
-            );
+            closeEditPersonModal();
+            
+            setTimeout(() => {
+                showModal(
+                    'Sucesso!',
+                    `Dados de "${personData.nome}" foram atualizados com sucesso!`,
+                    'fas fa-check-circle',
+                    [{
+                        text: 'OK',
+                        class: 'modal-btn-primary',
+                        action: () => {
+                            closeModal();
+                            carregarListaPessoas();
+                            carregarEstatisticas();
+                        }
+                    }]
+                );
+            }, 300);
         } else {
             const error = await response.json();
             showModal(
