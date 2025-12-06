@@ -45,10 +45,10 @@ function setupLoginForm() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        if (username === 'david alenor' && password === '123456') {
+        if (username === 'admin' && password === 'admin') {
             loginContainer.style.display = 'none';
             dashboardContainer.style.display = 'block';
-            document.getElementById('sidebarUserName').textContent = 'David Alenor';
+            document.getElementById('sidebarUserName').textContent = 'Admin';
             errorMessage.style.display = 'none';
             iniciarAtualizacaoDashboard();
         } else {
