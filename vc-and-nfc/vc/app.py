@@ -27,7 +27,7 @@ registration_id = None # Se for diferente de None, está em modo de cadastro
 data_lock = threading.Lock()
 
 SPRING_BOOT_API_URL = "http://localhost:8080/api"
-LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
+LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 2))
 
 # --- FUNÇÕES ---
 

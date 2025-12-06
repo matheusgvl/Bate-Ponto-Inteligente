@@ -9,7 +9,7 @@ PORTA_SERIAL = "COM3"
 BAUD_RATE = 9600
 
 # ID do Local que este leitor físico representa (ex: 1 = Portaria)
-LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
+LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 2))
 
 SPRING_API_URL = "http://localhost:8080/api/acesso/registrar/cartao"
 # --- FIM CONFIGURAÇÃO ---
