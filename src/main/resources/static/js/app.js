@@ -1940,11 +1940,6 @@ function exibirLogs(logs) {
                         ${statusText}
                     </span>
                 </td>
-                <td>
-                    <button class="btn-small btn-secondary" onclick="verDetalhesLog(${log.id})">
-                        <i class="fas fa-eye"></i> Ver Detalhes
-                    </button>
-                </td>
             </tr>
         `;
     }).join('');
@@ -1986,19 +1981,6 @@ function limparFiltros() {
     document.getElementById('filtroLocal').value = '';
     document.getElementById('filtroTipoAcesso').value = '';
     carregarLogs(0, 10);
-}
-
-function verDetalhesLog(logId) {
-    showModal(
-        'Detalhes do Log',
-        'Funcionalidade de detalhes será implementada em breve.',
-        'fas fa-info-circle',
-        [{
-            text: 'OK',
-            class: 'modal-btn-primary',
-            action: closeModal
-        }]
-    );
 }
 
 async function gerarRelatorio() {
