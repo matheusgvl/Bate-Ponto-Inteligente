@@ -1898,10 +1898,10 @@ async function carregarLogs(page = 0, size = 10) {
 function exibirLogs(logs) {
     const tbody = document.getElementById('logsTableBody');
     
-    if (logs.length === 0) {
+    if (!logs || logs.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="empty-state">
+                <td colspan="5" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>Nenhum log encontrado com os filtros aplicados</p>
                 </td>
@@ -1912,9 +1912,13 @@ function exibirLogs(logs) {
     
     tbody.innerHTML = logs.map(log => {
         const dataFormatada = new Date(log.dataHora).toLocaleString('pt-BR');
-        const statusClass = log.tipoAcesso.startsWith('PERMITIDO') ? 'status-permitido' : 'status-negado';
-        const statusText = log.tipoAcesso.startsWith('PERMITIDO') ? 'Permitido' : 'Negado';
-        const statusIcon = log.tipoAcesso.startsWith('PERMITIDO') ? 'fas fa-check-circle' : 'fas fa-times-circle';
+        const isPermitido = log.tipoAcesso && log.tipoAcesso.startsWith('PERMITIDO');
+        const statusClass = isPermitido ? 'status-permitido' : 'status-negado';
+        const statusText = isPermitido ? 'Permitido' : 'Negado';
+        const statusIcon = isPermitido ? 'fas fa-check-circle' : 'fas fa-times-circle';
+        const nomePessoa = log.nomePessoa || 'Desconhecido';
+        const nomeLocal = log.nomeLocal || 'Local não identificado';
+        const tipoAcesso = log.tipoAcesso ? log.tipoAcesso.replace(/_/g, ' ') : 'N/A';
         
         return `
             <tr>
@@ -1922,17 +1926,17 @@ function exibirLogs(logs) {
                 <td>
                     <div class="pessoa-info">
                         <i class="fas fa-user"></i>
-                        <span>${log.nomePessoa}</span>
+                        <span>${nomePessoa}</span>
                     </div>
                 </td>
                 <td>
                     <div class="local-info">
                         <i class="fas fa-building"></i>
-                        <span>${log.nomeLocal}</span>
+                        <span>${nomeLocal}</span>
                     </div>
                 </td>
                 <td>
-                    <span class="tipo-acesso">${log.tipoAcesso.replace(/_/g, ' ')}</span>
+                    <span class="tipo-acesso">${tipoAcesso}</span>
                 </td>
                 <td>
                     <span class="status ${statusClass}">
