@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import serial
 import time
 import re
@@ -27,7 +26,6 @@ def main():
         timeout_seconds = 30
         
         while True:
-            # Verificar timeout
             if time.time() - start_time > timeout_seconds:
                 timeout_msg = {"error": "Timeout - nenhum cartão detectado em 30 segundos"}
                 print(json.dumps(timeout_msg), flush=True)
@@ -37,15 +35,12 @@ def main():
             if not line:
                 continue
 
-            # Debug: mostrar linha recebida
             print(f"DEBUG: {line}", flush=True)
 
-            # Procurar pelo UID
             m = uid_pattern.search(line)
             if m:
                 uid_hex = m.group(1).upper()
                 
-                # Verificar se é um UID válido (começa com 63DF ou A979)
                 if uid_hex.startswith('63DF') or uid_hex.startswith('A979'):
                     success_msg = {
                         "success": True,

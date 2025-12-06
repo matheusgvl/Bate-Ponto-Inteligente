@@ -235,6 +235,7 @@ public class PessoaService {
 
         long acessosHoje = acessoService.contarAcessosHoje();
         long acessosNegados = acessoService.contarAcessosNegadosHoje();
+        long alertasCriticos = acessoService.contarAlertasCriticos();
 
         return new StatsResponseDTO(
                 totalPessoas,
@@ -243,7 +244,8 @@ public class PessoaService {
                 gerentes,
                 terceirizados,
                 acessosHoje,
-                acessosNegados
+                acessosNegados,
+                alertasCriticos
         );
     }
 

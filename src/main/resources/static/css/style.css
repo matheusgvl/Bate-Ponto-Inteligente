@@ -1199,6 +1199,131 @@ body {
     opacity: 0.8;
 }
 
+.access-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.access-feed::-webkit-scrollbar {
+    width: 6px;
+}
+
+.access-feed::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.access-feed::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.access-feed::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.access-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.access-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.access-item.access-granted {
+    border-left-color: #48bb78;
+}
+
+.access-item.access-denied {
+    border-left-color: #f56565;
+}
+
+.access-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 18px;
+}
+
+.access-granted .access-icon {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+}
+
+.access-denied .access-icon {
+    background: rgba(245, 101, 101, 0.2);
+    color: #f56565;
+}
+
+.access-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.access-person {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.access-location {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.access-location i {
+    font-size: 11px;
+}
+
+.access-time {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.access-status {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.access-granted .access-status {
+    color: #48bb78;
+}
+
+.access-denied .access-status {
+    color: #f56565;
+}
+
+.access-timestamp {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
 .system-footer {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(20px);

@@ -3,28 +3,23 @@ import requests
 import time
 import os
 
-# --- CONFIGURAÇÃO ---
-# IMPORTANTE: Mude para a porta que apareceu no seu Gerenciador de Dispositivos
 PORTA_SERIAL = "COM3"
 BAUD_RATE = 9600
 
-# ID do Local que este leitor físico representa (ex: 1 = Portaria)
 LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
 
 SPRING_API_URL = "http://localhost:8080/api/acesso/registrar/cartao"
-# --- FIM CONFIGURAÇÃO ---
 
 def iniciar():
     print(f"[NFC] Iniciando ponte na porta {PORTA_SERIAL} para Local ID {LOCAL_ID}...")
 
     try:
         arduino = serial.Serial(PORTA_SERIAL, BAUD_RATE, timeout=1)
-        time.sleep(2) # Espera o Arduino reiniciar após conexão
+        time.sleep(2)
         print(f"[NFC] Conectado! Aguardando cartões...")
 
         while True:
             if arduino.in_waiting > 0:
-                # Lê a linha enviada pelo Arduino (remove espaços e quebras de linha)
                 uid = arduino.readline().decode('utf-8').strip()
 
                 if uid:
@@ -50,7 +45,6 @@ def enviar_para_spring(uid):
             dados = response.json()
             print(f"[API] Resposta SUCESSO: {dados.get('status')} - {dados.get('motivo')}")
         else:
-            # Se for 403 Forbidden or 404 Not Found, ainda é uma resposta válida da nossa API
             try:
                 dados = response.json()
                 print(f"[API] Resposta NEGADO: {dados.get('status')} - {dados.get('motivo')}")
