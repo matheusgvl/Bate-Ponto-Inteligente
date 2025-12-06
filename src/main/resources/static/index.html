@@ -769,11 +769,11 @@
                     </div>
                     
                     <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group form-group-full">
                             <label for="editDescricaoLocal">
                                 <i class="fas fa-align-left"></i> Descrição
                             </label>
-                            <textarea id="editDescricaoLocal" name="descricao" placeholder="Digite uma descrição para o local" rows="4" required></textarea>
+                            <textarea id="editDescricaoLocal" name="descricao" placeholder="Digite uma descrição para o local" rows="3" required></textarea>
                         </div>
                     </div>
                     
@@ -832,15 +832,16 @@
                             <small class="form-help">Selecione quais funções poderão acessar este local</small>
                         </div>
                     </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditLocalModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeEditLocalModal()">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button type="submit" form="editLocalForm" class="btn-primary">
-                    <i class="fas fa-save"></i> Salvar Alterações
-                </button>
             </div>
         </div>
     </div>
