@@ -10,11 +10,9 @@ import os
 
 app = Flask(__name__)
 
-# --- VARIAVEIS GLOBAIS ---
 known_face_names = []
 known_face_encodings = []
 
-# Estado da captura (Adicionamos o campo 'encoding' para guardar o rosto temporariamente)
 capture_state = {
     "status": "idle",
     "message": "",
@@ -23,13 +21,11 @@ capture_state = {
 
 video_capture = cv2.VideoCapture(0)
 running = True
-registration_id = None # Se for diferente de None, está em modo de cadastro
+registration_id = None
 data_lock = threading.Lock()
 
 SPRING_BOOT_API_URL = "http://localhost:8080/api"
 LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
-
-# --- FUNÇÕES ---
 
 def sync_faces_from_spring():
     global known_face_names, known_face_encodings
@@ -72,7 +68,6 @@ def video_processing_thread():
             time.sleep(1)
             continue
 
-        # Reduz tamanho para processar rápido
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
         rgb = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
@@ -83,7 +78,6 @@ def video_processing_thread():
             for (top, right, bottom, left), face_encoding in zip(faces, encodings):
                 name = "Desconhecido"
 
-                # 1. Tenta Reconhecer (Modo Normal de Acesso)
                 if len(known_face_encodings) > 0:
                     matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
                     face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
@@ -91,7 +85,6 @@ def video_processing_thread():
                     if matches[best_match_index]:
                         name = known_face_names[best_match_index]
 
-                # 2. Se reconheceu alguém, registra acesso
                 if name != "Desconhecido":
                     now = time.time()
                     if name not in last_recognition_time or (now - last_recognition_time[name] > 60):
@@ -103,12 +96,9 @@ def video_processing_thread():
                         except:
                             pass
 
-                # 3. Lógica de Cadastro (AQUI MUDOU)
-                # Se o rosto é desconhecido E estamos no modo cadastro (registration_id ativado)
                 elif name == "Desconhecido" and registration_id is not None:
                     print(f"[CADASTRO] Rosto capturado! Guardando na memória...")
 
-                    # Em vez de enviar pro Java agora, guardamos aqui
                     encoding_list = face_encoding.tolist()
 
                     capture_state = {
@@ -117,10 +107,8 @@ def video_processing_thread():
                         "encoding": encoding_list
                     }
 
-                    # Desativa o modo cadastro pois já pegou
                     registration_id = None
 
-                # Desenha quadrado na tela
                 top *= 4
                 right *= 4
                 bottom *= 4
@@ -140,11 +128,8 @@ def video_processing_thread():
     cv2.destroyAllWindows()
     print("[INFO] Câmera finalizada.")
 
-# --- ENDPOINTS ---
-
 @app.route("/register", methods=["POST"])
 def start_registration():
-    # Mantido para compatibilidade, caso use cadastro por ID direto
     global registration_id
     data = request.get_json()
     registration_id = data.get("id", 999999)
@@ -155,10 +140,8 @@ def start_face_capture():
     global registration_id, capture_state
     data = request.get_json()
 
-    # Limpa estado anterior
     capture_state = {"status": "capturing", "message": "Aguardando rosto...", "encoding": None}
 
-    # Ativa modo cadastro (qualquer valor não nulo serve)
     registration_id = 123456
 
     print(f"[API] Iniciando captura para: {data.get('nome')}")
@@ -167,7 +150,6 @@ def start_face_capture():
 @app.route("/face/status", methods=["GET"])
 def get_capture_status():
     global capture_state
-    # O front-end chama isso para pegar o encoding quando estiver pronto
     return jsonify(capture_state), 200
 
 @app.route("/face/stop", methods=["POST"])

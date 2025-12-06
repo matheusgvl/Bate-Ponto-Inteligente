@@ -7,5 +7,6 @@ public record StatsResponseDTO(
         long gerentes,
         long terceirizados,
         long acessosHoje,
-        long acessosNegados) {
+        long acessosNegados,
+        long alertasCriticos) {
 }

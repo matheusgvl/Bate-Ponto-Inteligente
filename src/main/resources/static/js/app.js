@@ -1,4 +1,6 @@
 let tempFaceEncoding = null;
+let dashboardUpdateInterval = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
@@ -11,6 +13,24 @@ function initializeApp() {
     setupModal();
     updateTime();
     setInterval(updateTime, 1000);
+}
+
+function iniciarAtualizacaoDashboard() {
+    if (dashboardUpdateInterval) {
+        clearInterval(dashboardUpdateInterval);
+    }
+    
+    carregarEstatisticas();
+    dashboardUpdateInterval = setInterval(() => {
+        carregarEstatisticas();
+    }, 5000);
+}
+
+function pararAtualizacaoDashboard() {
+    if (dashboardUpdateInterval) {
+        clearInterval(dashboardUpdateInterval);
+        dashboardUpdateInterval = null;
+    }
 }
 
 function setupLoginForm() {
@@ -30,7 +50,7 @@ function setupLoginForm() {
             dashboardContainer.style.display = 'block';
             document.getElementById('sidebarUserName').textContent = 'David Alenor';
             errorMessage.style.display = 'none';
-            carregarEstatisticas();
+            iniciarAtualizacaoDashboard();
         } else {
             errorMessage.textContent = 'Usuário ou senha incorretos!';
             errorMessage.style.display = 'block';
@@ -224,30 +244,35 @@ function showSection(section) {
 
     if (section === 'dashboard') {
         dashboardMain.style.display = 'grid';
-    } else if (section === 'cadastrar-pessoas') {
-        if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'block';
-    } else if (section === 'listar-pessoas') {
-        if (listagemPessoasPanel) {
-            listagemPessoasPanel.style.display = 'block';
-            carregarListaPessoas();
-        }
-    } else if (section === 'cadastrar-local') {
-        if (cadastroLocalPanel) cadastroLocalPanel.style.display = 'block';
-    } else if (section === 'listar-locais') {
-        if (listagemLocaisPanel) {
-            listagemLocaisPanel.style.display = 'block';
-            carregarListaLocais();
-        }
-    } else if (section === 'visualizar-logs') {
-        if (visualizarLogsPanel) {
-            visualizarLogsPanel.style.display = 'block';
-            carregarFiltrosLogs();
-            carregarLogs();
-        }
-    } else if (section === 'relatorio-acessos') {
-        if (relatorioAcessosPanel) {
-            relatorioAcessosPanel.style.display = 'block';
-            gerarRelatorio();
+        iniciarAtualizacaoDashboard();
+    } else {
+        pararAtualizacaoDashboard();
+        
+        if (section === 'cadastrar-pessoas') {
+            if (cadastroPessoasPanel) cadastroPessoasPanel.style.display = 'block';
+        } else if (section === 'listar-pessoas') {
+            if (listagemPessoasPanel) {
+                listagemPessoasPanel.style.display = 'block';
+                carregarListaPessoas();
+            }
+        } else if (section === 'cadastrar-local') {
+            if (cadastroLocalPanel) cadastroLocalPanel.style.display = 'block';
+        } else if (section === 'listar-locais') {
+            if (listagemLocaisPanel) {
+                listagemLocaisPanel.style.display = 'block';
+                carregarListaLocais();
+            }
+        } else if (section === 'visualizar-logs') {
+            if (visualizarLogsPanel) {
+                visualizarLogsPanel.style.display = 'block';
+                carregarFiltrosLogs();
+                carregarLogs();
+            }
+        } else if (section === 'relatorio-acessos') {
+            if (relatorioAcessosPanel) {
+                relatorioAcessosPanel.style.display = 'block';
+                gerarRelatorio();
+            }
         }
     }
 }
@@ -817,9 +842,10 @@ async function carregarEstatisticas() {
         document.getElementById('stat-pessoas-ativas').textContent = stats.totalPessoas;
         document.getElementById('stat-acessos-hoje').textContent = stats.acessosHoje;
         document.getElementById('stat-acessos-negados').textContent = stats.acessosNegados;
-        document.getElementById('stat-alertas-criticos').textContent = 0;
+        document.getElementById('stat-alertas-criticos').textContent = stats.alertasCriticos;
         
         carregarAreasRestritas();
+        carregarAcessosTempoReal();
 
     } catch (error) {
         console.error('Falha ao carregar estatísticas:', error);
@@ -2098,6 +2124,86 @@ document.addEventListener('DOMContentLoaded', function() {
 
     carregarAreasRestritas();
 });
+
+async function carregarAcessosTempoReal() {
+    try {
+        const response = await fetch('/api/acesso/log', {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Falha ao buscar acessos: ${response.status}`);
+        }
+
+        const acessos = await response.json();
+        renderizarAcessosTempoReal(acessos);
+
+    } catch (error) {
+        console.error('Erro ao carregar acessos em tempo real:', error);
+        renderizarAcessosTempoReal([]);
+    }
+}
+
+function renderizarAcessosTempoReal(acessos) {
+    const accessSection = document.querySelector('.access-feed-section');
+    
+    const existingContent = accessSection.querySelector('.empty-state, .access-feed');
+    if (existingContent) {
+        existingContent.remove();
+    }
+    
+    if (!acessos || acessos.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.innerHTML = `
+            <i class="fas fa-history"></i>
+            <h4>Nenhum acesso registrado</h4>
+            <p>Sistema novo sem histórico de acessos</p>
+        `;
+        accessSection.appendChild(emptyState);
+        return;
+    }
+    
+    const accessFeed = document.createElement('div');
+    accessFeed.className = 'access-feed';
+    
+    const acessosRecentes = acessos.slice(0, 10);
+    
+    acessosRecentes.forEach(acesso => {
+        const isPermitido = acesso.tipoAcesso && acesso.tipoAcesso.includes('PERMITIDO');
+        const statusClass = isPermitido ? 'access-granted' : 'access-denied';
+        const statusIcon = isPermitido ? 'fa-check-circle' : 'fa-times-circle';
+        const statusText = isPermitido ? 'Permitido' : 'Negado';
+        
+        const dataHora = new Date(acesso.dataHora);
+        const horaFormatada = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const accessItem = document.createElement('div');
+        accessItem.className = `access-item ${statusClass}`;
+        accessItem.innerHTML = `
+            <div class="access-icon">
+                <i class="fas ${statusIcon}"></i>
+            </div>
+            <div class="access-details">
+                <div class="access-person">${acesso.nomePessoa || 'Desconhecido'}</div>
+                <div class="access-location">
+                    <i class="fas fa-map-marker-alt"></i> ${acesso.nomeLocal || 'Local não identificado'}
+                </div>
+            </div>
+            <div class="access-time">
+                <div class="access-status">${statusText}</div>
+                <div class="access-timestamp">${horaFormatada}</div>
+            </div>
+        `;
+        accessFeed.appendChild(accessItem);
+    });
+    
+    accessSection.appendChild(accessFeed);
+}
 
 async function carregarAreasRestritas() {
     try {

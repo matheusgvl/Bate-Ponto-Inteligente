@@ -208,6 +208,29 @@ public class AcessoService {
         return acessoRepository.countByDataHoraBetween(inicioDoDia, fimDoDia);
     }
 
+    public long contarAlertasCriticos() {
+        LocalDateTime inicioDoDia = LocalDate.now().atStartOfDay();
+        LocalDateTime fimDoDia = LocalDate.now().atTime(23, 59, 59);
+        
+        List<Acesso> acessosNegadosHoje = acessoRepository.findByDataHoraBetweenOrderByDataHoraDesc(inicioDoDia, fimDoDia)
+                .stream()
+                .filter(acesso -> !acesso.getTipoAcesso().name().contains("PERMITIDO"))
+                .collect(Collectors.toList());
+        
+        Map<Long, Long> tentativasPorLocal = acessosNegadosHoje.stream()
+                .collect(Collectors.groupingBy(
+                        acesso -> acesso.getLocal().getId(),
+                        Collectors.counting()
+                ));
+        
+        long alertas = 0;
+        for (Long tentativas : tentativasPorLocal.values()) {
+            alertas += tentativas / 3;
+        }
+        
+        return alertas;
+    }
+
     public long contarAcessosNegadosHoje() {
         LocalDateTime inicioDoDia = LocalDate.now().atStartOfDay();
         LocalDateTime fimDoDia = LocalDate.now().atTime(23, 59, 59);
