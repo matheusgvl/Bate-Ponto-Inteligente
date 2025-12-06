@@ -766,6 +766,7 @@ async function captureFaceData(nome) {
 
                 if (statusData.status === 'success' && statusData.encoding) {
                     clearInterval(checkInterval);
+                    clearTimeout(timeoutId);
 
                     tempFaceEncoding = statusData.encoding;
 
@@ -782,6 +783,7 @@ async function captureFaceData(nome) {
                 }
                 else if (statusData.status === 'error') {
                     clearInterval(checkInterval);
+                    clearTimeout(timeoutId);
                     showModal('Erro', 'O sistema não conseguiu capturar o rosto.', 'fas fa-times', [{text: 'Fechar', action: closeModal}]);
                 }
             } catch (e) {
@@ -789,7 +791,7 @@ async function captureFaceData(nome) {
             }
         }, 1000);
 
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             clearInterval(checkInterval);
             if (!tempFaceEncoding) {
                 fetch('/api/person/face/stop', {method: 'POST'}).catch(() => {});
