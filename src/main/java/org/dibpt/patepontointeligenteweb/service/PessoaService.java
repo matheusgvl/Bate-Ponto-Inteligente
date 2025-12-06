@@ -217,12 +217,9 @@ public class PessoaService {
     }
 
     public void excluirPessoa(Long id) throws Exception {
-        Optional<Pessoa> pessoa = pessoaRepository.findById(id);
-        if (pessoa.isEmpty()) {
-            throw new Exception("Pessoa não encontrada");
-        }
-
-        pessoaRepository.deleteById(id);
+        Pessoa pessoa = pessoaRepository.findById(id).orElseThrow(() -> new Exception("Pessoa não encontrada com ID: " + id));
+        pessoa.setAtivo(false);
+        pessoaRepository.save(pessoa);
     }
 
 
