@@ -4,7 +4,6 @@ import org.dibpt.patepontointeligenteweb.DTO.LocalRequestDTO;
 import org.dibpt.patepontointeligenteweb.DTO.LocalResponseDTO;
 import org.dibpt.patepontointeligenteweb.service.LocalService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +26,9 @@ public class LocalController {
     public ResponseEntity<LocalResponseDTO> salvarLocal(@RequestBody LocalRequestDTO dto) {
         LocalResponseDTO response = localService.salvarLocal(dto);
         URI location = URI.create("/api/local/" + response.id());
+        if (location == null) {
+            return ResponseEntity.ok(response);
+        }
         return ResponseEntity.created(location).body(response);
     }
 

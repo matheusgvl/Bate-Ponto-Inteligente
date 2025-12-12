@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("null")
 @Service
 public class PessoaService {
 
@@ -51,6 +52,9 @@ public class PessoaService {
         }
     }
     public void salvarFace(SalvarFaceDTO dto) throws Exception {
+        if (dto.id() == null) {
+            throw new IllegalArgumentException("ID da pessoa não pode ser null");
+        }
         Pessoa pessoa = pessoaRepository.findById(dto.id())
                 .orElseThrow(() -> new Exception("Pessoa não encontrada para o ID: " + dto.id()));
 
@@ -84,10 +88,10 @@ public class PessoaService {
         if (!validarCpf(cpfLimpo)) {
             throw new Exception("CPF inválido");
         }
-        LocalDate dataNascimento = null;
+
         if (dto.dataNascimento() != null && !dto.dataNascimento().trim().isEmpty()) {
             try {
-                dataNascimento = LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
+                LocalDate.parse(dto.dataNascimento(), DateTimeFormatter.ISO_LOCAL_DATE);
             } catch (Exception e) {
                 throw new Exception("Data de nascimento inválida");
             }
@@ -254,10 +258,11 @@ public class PessoaService {
                 .collect(Collectors.toList());
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> verificarStatusCaptura() {
         String pythonApiUrl = "http://localhost:5000/face/status";
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(pythonApiUrl, Map.class);
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.getForEntity(pythonApiUrl, Map.class);
             return response.getBody();
         } catch (Exception e) {
             Map<String, Object> erro = new HashMap<>();
@@ -295,6 +300,7 @@ public class PessoaService {
         return Character.getNumericValue(cpf.charAt(10)) == digito2;
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> capturarRostoPython(String nome) throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("nome", nome);
@@ -303,7 +309,7 @@ public class PessoaService {
         String pythonApiUrl = "http://localhost:5000/face/capture";
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(pythonApiUrl, request, Map.class);
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.postForEntity(pythonApiUrl, request, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
@@ -315,11 +321,12 @@ public class PessoaService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> pararCapturaRosto() throws Exception {
         String pythonApiUrl = "http://localhost:5000/face/stop";
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(pythonApiUrl, null, Map.class);
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.postForEntity(pythonApiUrl, null, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();

@@ -1,7 +1,5 @@
 package org.dibpt.patepontointeligenteweb.DTO;
 
-import java.time.LocalDate;
-
 public record AtualizarPessoaDTO(
         String nome,
         String cpf,

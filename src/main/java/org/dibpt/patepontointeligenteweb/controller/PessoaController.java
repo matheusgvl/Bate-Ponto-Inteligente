@@ -12,7 +12,6 @@ import org.dibpt.patepontointeligenteweb.DTO.PessoaResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarPessoaDTO;
 import org.dibpt.patepontointeligenteweb.DTO.StatsResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.SalvarFaceDTO;
-import org.springframework.web.client.RestTemplate;
 import org.dibpt.patepontointeligenteweb.service.CardReaderService;
 
 import java.net.URI;
@@ -24,13 +23,11 @@ import java.util.List;
 public class PessoaController {
 
     private final PessoaService pessoaService;
-    private final RestTemplate restTemplate;
     private final CardReaderService cardReaderService;
 
     @Autowired
-    public PessoaController(PessoaService pessoaService, RestTemplate restTemplate, CardReaderService cardReaderService) {
+    public PessoaController(PessoaService pessoaService, CardReaderService cardReaderService) {
         this.pessoaService = pessoaService;
-        this.restTemplate = restTemplate;
         this.cardReaderService = cardReaderService;
     }
 
@@ -39,6 +36,9 @@ public class PessoaController {
         Pessoa pessoaSalva = pessoaService.salvarPessoa(dto);
         PessoaResponseDTO responseDto = new PessoaResponseDTO(pessoaSalva);
         URI location = URI.create("/api/person/" + responseDto.id());
+        if (location == null) {
+            return ResponseEntity.ok(responseDto);
+        }
         return ResponseEntity.created(location).body(responseDto);
     }
 
