@@ -1,4 +1,4 @@
-# 🔐 Bate Ponto Inteligente
+# 🔐 Smart Control
 
 Sistema de controle de acesso com autenticação 2FA usando cartão NFC + reconhecimento facial.
 
@@ -70,12 +70,4 @@ docker-compose up --build -d
 - Python + Face Recognition + OpenCV
 - MySQL 8.0
 - Docker + Docker Compose
-- Arduino/ESP32 + MFRC522
-
-## 📝 Licença
-
-MIT License - Open Source
-
----
-
-**Desenvolvido para o PIEC2 2025**
+- Arduino/ESP32 + RFID PN532
