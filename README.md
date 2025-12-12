@@ -1,52 +1,81 @@
-graph TD
-    User((Frontend / Usuário))
-    PyScriptNFC[[Python: Leitor NFC]]
-    PyScriptFace[[Python: Câmera]]
+# 🔐 Bate Ponto Inteligente
 
-    subgraph Controller_Layer [Controllers - API REST]
-        PC[PessoaController]
-        LC[LocalController]
-        AC[AcessoController]
-    end
+Sistema de controle de acesso com autenticação 2FA usando cartão NFC + reconhecimento facial.
 
-    subgraph DTO_Layer [DTOs - O que entra e sai]
-        InputDTOs[SalvarPessoaDTO<br>LocalRequestDTO<br>Map JSON]
-        OutputDTOs[PessoaResponseDTO<br>LocalResponseDTO<br>AcessoResponseDTO]
-    end
+## 🚀 Iniciar o Projeto
 
-    subgraph Service_Layer [Services - Lógica]
-        PS[PessoaService]
-        LS[LocalService]
-        AS[AcessoService]
-    end
+### Pré-requisitos
+- Docker e Docker Compose instalados
+- Arduino com leitor NFC conectado via USB
+- Webcam
 
-    subgraph Entity_Layer [Entities - Tabelas]
-        E_Pessoa[(Pessoa)]
-        E_Local[(Local)]
-        E_Acesso[(Acesso)]
-    end
+### Configuração Inicial
 
-    User -->|Envia JSON| PC & LC & AC
-    PyScriptNFC -->|POST /registrar/cartao| AC
-    PyScriptFace -->|POST /registrar/rosto| AC
+1. **Clone o repositório**
+```bash
+git clone https://github.com/iOzoki/Bate-Ponto-Inteligente.git
+cd Bate-Ponto-Inteligente
+```
 
-    PC -->|Chama| PS
-    LC -->|Chama| LS
-    AC -->|Chama| AS
+2. **Configure a porta do Arduino** (opcional)
+```bash
+# Criar arquivo .env (se necessário ajustar a porta USB)
+cp .env.example .env
 
-    PC & LC & AC -.->|Recebe| InputDTOs
-    PC & LC & AC -.->|Retorna| OutputDTOs
+# Mac: ARDUINO_PORT=/dev/tty.usbserial-XXXX
+# Windows: ARDUINO_PORT=COM5
+# Linux: ARDUINO_PORT=/dev/ttyUSB0
+```
 
-    PS <-->|Lê/Grava| E_Pessoa
-    LS <-->|Lê/Grava| E_Local
-    AS -->|Busca| E_Pessoa
-    AS -->|Busca| E_Local
-    AS -->|Cria| E_Acesso
+3. **Inicie todos os serviços**
+```bash
+docker-compose up --build -d
+```
 
-    E_Local <-->|ManyToMany<br>PessoasAutorizadas| E_Pessoa
-    E_Acesso -->|ManyToOne| E_Pessoa
-    E_Acesso -->|ManyToOne| E_Local
+4. **Acesse o sistema**
+```
+http://localhost:8080
+```
 
-    style E_Pessoa fill:#f9f,stroke:#333,stroke-width:2px
-    style E_Local fill:#bbf,stroke:#333,stroke-width:2px
-    style E_Acesso fill:#bfb,stroke:#333,stroke-width:2px
+**Login padrão:**
+- Usuário: `admin`
+- Senha: `admin`
+
+## �️ Comandos Úteis
+
+```bash
+# Ver logs
+docker-compose logs -f
+
+# Parar tudo
+docker-compose down
+
+# Reiniciar após mudanças
+docker-compose restart
+
+# Reconstruir tudo
+docker-compose up --build -d
+```
+
+## 🏗️ Arquitetura
+
+- **Spring Boot** (8080) - Backend + Frontend
+- **MySQL** (3306) - Banco de dados
+- **Face Recognition** (5000) - IA reconhecimento facial
+- **Arduino NFC** - Leitor de cartões
+
+## � Tecnologias
+
+- Java 21 + Spring Boot 3.5.6
+- Python + Face Recognition + OpenCV
+- MySQL 8.0
+- Docker + Docker Compose
+- Arduino/ESP32 + MFRC522
+
+## 📝 Licença
+
+MIT License - Open Source
+
+---
+
+**Desenvolvido para o PIEC2 2025**

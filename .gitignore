@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 mysql_data/
+
 ### STS ###
 .apt_generated
 .classpath
@@ -39,3 +40,18 @@ JSP CACHEDIR.TAG
 
 ### VS Code ###
 .vscode/
+
+### Docker ###
+.env
+*.log
+
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
