@@ -1,0 +1,110 @@
+
+name: CI/CD Bate-Ponto VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Operação"
+        required: true
+        type: choice
+        options:
+          - validate
+          - deploy
+        default: validate
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bate-ponto-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validar Docker Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar Compose
+        run: docker compose config --quiet
+
+      - name: Validar Dockerfiles
+        run: |
+          test -f Dockerfile
+          test -f vc-and-nfc/vc/Dockerfile
+          test -f vc-and-nfc/requirements.txt
+          test -f arduino/Dockerfile
+
+  deploy:
+    name: Deploy na VPS
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Preparar SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST_KEY: ${{ secrets.VPS_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$HOST_KEY" > ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Atualizar aplicação
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          ssh -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes \
+              -p "$VPS_PORT" \
+              "$VPS_USER@$VPS_HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+
+          cd /root/Bate-Ponto-Inteligente
+
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "ERRO: existem alterações locais."
+            exit 1
+          fi
+
+          git fetch origin main
+          git checkout main
+          git merge --ff-only origin/main
+
+          docker compose config --quiet
+
+          docker compose build spring-app face-recognition
+
+          docker compose up -d --no-deps \
+            spring-app face-recognition
+
+          docker compose ps
+
+          for service in spring-app face-recognition; do
+            id="$(docker compose ps -q "$service")"
+            test -n "$id"
+
+            state="$(docker inspect \
+              -f '{{.State.Status}}' "$id")"
+
+            test "$state" = "running" || exit 1
+          done
+
+          echo "Deploy concluído. Containers em execução."
+          REMOTE
