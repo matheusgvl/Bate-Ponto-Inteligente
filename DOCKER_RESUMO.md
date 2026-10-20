@@ -33,7 +33,7 @@ cp .env.example .env
 docker-compose up --build -d
 
 # 4. Acesse o sistema
-http://localhost:8080
+http://localhost:8081
 ```
 
 ## ✨ Benefícios:
@@ -54,10 +54,10 @@ http://localhost:8080
 - Persiste dados em volume
 
 ### Container 2 - Spring Boot:
-- Instala Java 21 + Maven
+- Instala Java 25 + Maven
 - Baixa todas dependências do pom.xml
 - Compila o projeto
-- Inicia aplicação na porta 8080
+- Inicia aplicação na porta 8081 (porta 8080 dentro do container)
 
 ### Container 3 - Face Recognition:
 - Instala Python 3.11

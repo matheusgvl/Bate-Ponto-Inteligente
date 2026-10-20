@@ -3,7 +3,7 @@
 ## 📦 O que o Docker faz automaticamente:
 
 ✅ Instala e configura MySQL 8.0  
-✅ Compila e roda Spring Boot (Java 21 + Maven)  
+✅ Compila e roda Spring Boot (Java 25 + Maven)
 ✅ Instala Python + OpenCV + Face Recognition  
 ✅ Configura Arduino/NFC com PySerial  
 ✅ Conecta tudo automaticamente  
@@ -19,7 +19,7 @@ cp .env.example .env
 docker-compose up --build -d
 
 # 3. Acesse
-http://localhost:8080
+http://localhost:8081
 ```
 
 ## 🔌 Portas USB por sistema:
@@ -46,7 +46,7 @@ docker-compose down                 # Parar tudo
 
 ## ⚠️ Problemas comuns:
 
-**Erro "port already in use"**: Algo usa a porta 8080
+**Erro "port already in use"**: Algo usa a porta 8081
 ```bash
 docker-compose down
 # Ou mude a porta no docker-compose.yml

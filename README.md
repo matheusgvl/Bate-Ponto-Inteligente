@@ -34,7 +34,7 @@ docker-compose up --build -d
 
 4. **Acesse o sistema**
 ```
-http://localhost:8080
+http://localhost:8081
 ```
 
 **Login padrão:**
@@ -59,14 +59,14 @@ docker-compose up --build -d
 
 ## 🏗️ Arquitetura
 
-- **Spring Boot** (8080) - Backend + Frontend
+- **Spring Boot** (8081) - Backend + Frontend
 - **MySQL** (3306) - Banco de dados
 - **Face Recognition** (5000) - IA reconhecimento facial
 - **Arduino NFC** - Leitor de cartões
 
 ## � Tecnologias
 
-- Java 21 + Spring Boot 3.5.6
+- Java 25 (LTS) + Spring Boot 3.5.6
 - Python + Face Recognition + OpenCV
 - MySQL 8.0
 - Docker + Docker Compose
