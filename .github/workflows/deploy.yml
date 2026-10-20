@@ -1,4 +1,3 @@
-
 name: CI/CD Bate-Ponto VPS
 
 on:
@@ -50,41 +49,36 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      
       - name: Preparar SSH
         env:
           DEPLOY_KEY: ${{ secrets.VPS_SSH_KEY }}
           HOST_KEY: ${{ secrets.VPS_HOST_KEY }}
         run: |
           set -euo pipefail
-      
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-      
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$HOST_KEY" > ~/.ssh/known_hosts
-      
-          chmod 600 ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/known_hosts
-      
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
-      
-          echo "Chave privada SSH validada."
 
-
-      - name: Atualizar aplicação
+      - name: Atualizar aplicação com rollback automático
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
+          TARGET_SHA: ${{ github.sha }}
         run: |
+          set -euo pipefail
           ssh -o BatchMode=yes \
               -o StrictHostKeyChecking=yes \
               -p "$VPS_PORT" \
-              "$VPS_USER@$VPS_HOST" 'bash -se' <<'REMOTE'
+              "$VPS_USER@$VPS_HOST" 'bash -se' <<REMOTE
           set -euo pipefail
 
           cd /root/Bate-Ponto-Inteligente
+          TARGET_SHA='$TARGET_SHA'
+          STATE_FILE='.deploy-previous-sha'
 
           if [ -n "$(git status --porcelain)" ]; then
             echo "ERRO: existem alterações locais."
@@ -95,24 +89,76 @@ jobs:
           git checkout main
           git merge --ff-only origin/main
 
-          docker compose config --quiet
+          # Deploya o commit validado pelo workflow, não uma revisão que chegou
+          # depois do início da execução.
+          git cat-file -e "${TARGET_SHA}^{commit}"
+          if [ "$(git rev-parse HEAD)" != "$TARGET_SHA" ]; then
+            echo "ERRO: HEAD da VPS não corresponde ao commit deste workflow."
+            exit 1
+          fi
 
+          PREVIOUS_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          if [ -f "$STATE_FILE" ]; then
+            PREVIOUS_SHA="$(cat "$STATE_FILE")"
+          fi
+          if [ -z "$PREVIOUS_SHA" ] || ! git cat-file -e "${PREVIOUS_SHA}^{commit}" 2>/dev/null; then
+            echo "ERRO: não foi possível identificar um commit anterior válido para rollback."
+            exit 1
+          fi
+
+          docker compose config --quiet
           docker compose build spring-app face-recognition
 
-          docker compose up -d --no-deps \
-            spring-app face-recognition
+          rollback() {
+            echo "Falha no deploy. Restaurando commit $PREVIOUS_SHA..."
+            git checkout -f "$PREVIOUS_SHA"
+            docker compose config --quiet
+            docker compose build spring-app face-recognition
+            docker compose up -d --no-deps spring-app face-recognition
+            docker compose ps
+            echo "Rollback executado. Verifique os logs e a saúde dos serviços."
+          }
+          trap 'rollback' ERR
 
-          docker compose ps
+          # Persiste a versão anterior antes de alterar os serviços.
+          printf '%s\n' "$PREVIOUS_SHA" > "$STATE_FILE.tmp"
+          mv "$STATE_FILE.tmp" "$STATE_FILE"
+
+          docker compose up -d --no-deps spring-app face-recognition
+
+          # Verifica disponibilidade real por HTTP, além do estado do container.
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8082/api/local/test >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "ERRO: endpoint Spring não ficou saudável."
+              false
+            fi
+            sleep 5
+          done
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:5000/health >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "ERRO: endpoint de reconhecimento facial não ficou saudável."
+              false
+            fi
+            sleep 5
+          done
 
           for service in spring-app face-recognition; do
             id="$(docker compose ps -q "$service")"
             test -n "$id"
-
-            state="$(docker inspect \
-              -f '{{.State.Status}}' "$id")"
-
-            test "$state" = "running" || exit 1
+            state="$(docker inspect -f '{{.State.Status}}' "$id")"
+            test "$state" = "running"
           done
 
-          echo "Deploy concluído. Containers em execução."
+          trap - ERR
+          printf '%s\n' "$TARGET_SHA" > "$STATE_FILE.tmp"
+          mv "$STATE_FILE.tmp" "$STATE_FILE"
+          docker compose ps
+          echo "Deploy concluído e endpoints HTTP validados."
           REMOTE
