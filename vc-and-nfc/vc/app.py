@@ -24,7 +24,7 @@ running = True
 registration_id = None
 data_lock = threading.Lock()
 
-SPRING_BOOT_API_URL = "http://localhost:8080/api"
+SPRING_BOOT_API_URL = os.getenv("SPRING_BOOT_API_URL", "http://spring-app:8080/api").rstrip("/")
 LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
 
 def sync_faces_from_spring():
@@ -39,12 +39,15 @@ def sync_faces_from_spring():
             temp_encodings = []
 
             for item in data:
-                temp_names.append(item['nome'])
                 try:
-                    encoding_list = json.loads(item['encoding'])
-                    temp_encodings.append(np.array(encoding_list))
-                except:
-                    pass
+                    encoding_list = json.loads(item["encoding"])
+                    encoding = np.asarray(encoding_list, dtype=np.float64)
+                    if encoding.shape != (128,) or not np.all(np.isfinite(encoding)):
+                        raise ValueError("invalid face encoding")
+                    temp_names.append(item["nome"])
+                    temp_encodings.append(encoding)
+                except (KeyError, TypeError, ValueError):
+                    print("[WARN] Ignorando cadastro facial inválido")
 
             with data_lock:
                 known_face_names = temp_names
