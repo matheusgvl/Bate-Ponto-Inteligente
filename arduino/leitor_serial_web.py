@@ -1,69 +1,53 @@
 #!/usr/bin/env python3
 import serial
 import time
-import re
 import sys
 import json
 
-PORTA = "COM5"  
-BAUDRATE = 115200                
-TIMEOUT = 1                      
-
-uid_pattern = re.compile(r"UID \(Identificador Unico\):\s*([0-9A-Fa-f]+)")
+PORTA = "COM3"  # Altere para COM5 se for a porta correta do Arduino
+BAUDRATE = 9600 # Deve ser 9600 para coincidir com a configuração do Arduino
+TIMEOUT = 1
 
 def main():
     try:
         ser = serial.Serial(PORTA, BAUDRATE, timeout=TIMEOUT)
-        print(f"Conectado em {PORTA} @ {BAUDRATE}bps. Aguardando cartão NFC...", flush=True)
-        time.sleep(2)  
+        time.sleep(2)
+        ser.reset_input_buffer()
     except Exception as e:
-        error_msg = {"error": f"Erro ao abrir porta {PORTA}: {str(e)}"}
-        print(json.dumps(error_msg), flush=True)
+        print(json.dumps({"success": False, "error": f"Falha ao abrir {PORTA}. Verifique se está livre."}), flush=True)
         sys.exit(1)
 
     try:
-        start_time = time.time()
-        timeout_seconds = 30
-        
-        while True:
-            if time.time() - start_time > timeout_seconds:
-                timeout_msg = {"error": "Timeout - nenhum cartão detectado em 30 segundos"}
-                print(json.dumps(timeout_msg), flush=True)
-                break
-            
-            line = ser.readline().decode(errors='ignore').strip()
-            if not line:
-                continue
+        inicio = time.time()
+        tempo_maximo = 30
 
-            print(f"DEBUG: {line}", flush=True)
+        while (time.time() - inicio) < tempo_maximo:
+            if ser.in_waiting > 0:
+                try:
+                    line = ser.readline().decode('utf-8', errors='ignore').strip()
 
-            m = uid_pattern.search(line)
-            if m:
-                uid_hex = m.group(1).upper()
-                
-                if uid_hex.startswith('63DF') or uid_hex.startswith('A979'):
-                    success_msg = {
-                        "success": True,
-                        "uid": uid_hex,
-                        "message": "Cartão NFC detectado com sucesso"
-                    }
-                    print(json.dumps(success_msg), flush=True)
-                    break
-                else:
-                    invalid_msg = {
-                        "warning": f"Cartão detectado mas UID inválido: {uid_hex}",
-                        "uid": uid_hex
-                    }
-                    print(json.dumps(invalid_msg), flush=True)
+                    if not line:
+                        continue
 
-    except KeyboardInterrupt:
-        interrupt_msg = {"info": "Leitura interrompida pelo usuário"}
-        print(json.dumps(interrupt_msg), flush=True)
+                    # Extrai apenas os caracteres hexadecimais (limpa textos indesejados que o Arduino possa enviar)
+                    uid_limpo = ''.join(filter(lambda x: x in '0123456789ABCDEFabcdef', line)).upper()
+
+                    if len(uid_limpo) >= 8:
+                        print(json.dumps({"success": True, "uid": uid_limpo}), flush=True)
+                        time.sleep(1)
+                        return
+                except Exception:
+                    continue
+
+            time.sleep(0.1)
+
+        print(json.dumps({"success": False, "error": "Tempo esgotado. Nenhum cartão lido."}), flush=True)
+
     except Exception as e:
-        error_msg = {"error": f"Erro durante leitura: {str(e)}"}
-        print(json.dumps(error_msg), flush=True)
+        print(json.dumps({"success": False, "error": str(e)}), flush=True)
     finally:
-        ser.close()
+        if 'ser' in locals() and ser.is_open:
+            ser.close()
 
 if __name__ == "__main__":
     main()

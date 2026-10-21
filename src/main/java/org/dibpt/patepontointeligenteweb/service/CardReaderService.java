@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 public class CardReaderService {
 
 
-    private static final String PYTHON_EXECUTABLE = "C:\\Users\\isaac\\Downloads\\Projetos em Java\\Bate-Ponto-Inteligente\\vc-and-nfc\\.venv\\Scripts\\python.exe";
-    private static final String PYTHON_SCRIPT_PATH = "C:\\Users\\isaac\\Downloads\\Projetos em Java\\Bate-Ponto-Inteligente\\vc-and-nfc\\nfc\\leitor_serial_web.py";
+    private static final String PYTHON_EXECUTABLE = "C:\\Users\\isaac\\Downloads\\Bate-Ponto-Inteligente\\vc-and-nfc\\.venv\\Scripts\\python.exe";
+    private static final String PYTHON_SCRIPT_PATH = "C:\\Users\\isaac\\Downloads\\Bate-Ponto-Inteligente\\vc-and-nfc\\nfc\\leitor_serial_web.py";
 
     private Process currentProcess;
     private final ObjectMapper objectMapper = new ObjectMapper();

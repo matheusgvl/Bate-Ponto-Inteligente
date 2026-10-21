@@ -3,7 +3,7 @@ import serial
 import time
 import re
 
-PORTA = "COM5"  
+PORTA = "COM3"
 BAUDRATE = 115200                
 TIMEOUT = 1                      
 
