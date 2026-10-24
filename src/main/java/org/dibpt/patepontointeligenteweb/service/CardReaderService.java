@@ -14,17 +14,15 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class CardReaderService {
 
-
-    private static final String PYTHON_EXECUTABLE = "C:\\Users\\isaac\\Downloads\\Bate-Ponto-Inteligente\\vc-and-nfc\\.venv\\Scripts\\python.exe";
-    private static final String PYTHON_SCRIPT_PATH = "C:\\Users\\isaac\\Downloads\\Bate-Ponto-Inteligente\\vc-and-nfc\\nfc\\leitor_serial_web.py";
+    // Certifique-se que estes caminhos estão corretos no seu computador
+    private static final String PYTHON_EXECUTABLE = "G:\\Trabalhos\\bate-ponto-inteligente\\Bate-Ponto-Inteligente\\.venv\\Scripts\\python.exe";
+    private static final String PYTHON_SCRIPT_PATH = "G:\\Trabalhos\\bate-ponto-inteligente\\Bate-Ponto-Inteligente\\vc-and-nfc\\nfc\\leitor_serial_web.py";
 
     private Process currentProcess;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
     public synchronized Map<String, Object> iniciarLeitura() {
         Map<String, Object> response = new HashMap<>();
-
 
         this.pararLeituraInterno();
 

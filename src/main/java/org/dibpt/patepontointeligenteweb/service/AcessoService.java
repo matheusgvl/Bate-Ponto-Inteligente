@@ -3,6 +3,7 @@ package org.dibpt.patepontointeligenteweb.service;
 import org.dibpt.patepontointeligenteweb.DTO.AcessoLogResponseDTO;
 import org.dibpt.patepontointeligenteweb.DTO.AcessoResponseDTO;
 import org.dibpt.patepontointeligenteweb.Entity.Acesso;
+import org.dibpt.patepontointeligenteweb.Entity.ENUM.NivelRestricao;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.TipoAcesso;
 import org.dibpt.patepontointeligenteweb.Entity.Local;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
@@ -54,6 +55,11 @@ public class AcessoService {
         }
         Local local = localOpt.get();
 
+        // Bloqueia se o local for apenas facial (Nível Médio)
+        if (local.getNivelRestricao() == NivelRestricao.MEDIO) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new AcessoResponseDTO("NEGADO", "Este local exige reconhecimento facial.", null));
+        }
+
         Optional<Pessoa> pessoaOpt = pessoaRepository.findByCardUID(cardUID.trim());
         if (pessoaOpt.isEmpty()) {
             registrarFalha(null, local, TipoAcesso.NEGADO_CARTAO_NAO_ENCONTRADO);
@@ -65,6 +71,15 @@ public class AcessoService {
         Optional<ResponseEntity<AcessoResponseDTO>> erro = validarPessoaELocal(pessoa, local);
         if (erro.isPresent()) return erro.get();
 
+        // Nível BAIXO: Acesso direto apenas com NFC
+        if (local.getNivelRestricao() == NivelRestricao.BAIXO) {
+            resetarEstadoLocal(local);
+            Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_CARTAO, pessoa, local);
+            acessoRepository.save(sucesso);
+            return ResponseEntity.ok(new AcessoResponseDTO("PERMITIDO", "Acesso liberado via cartão.", pessoa.getNome()));
+        }
+
+        // Nível ALTO: Inicia o processo de 2FA
         local.setPendingAuthenticationState("WAITING_FACE");
         local.setPendingUserId(pessoa.getId());
         local.setPendingAuthTimestamp(LocalDateTime.now());
@@ -84,6 +99,11 @@ public class AcessoService {
         }
         Local local = localOpt.get();
 
+        // Bloqueia se o local for apenas cartão (Nível Baixo)
+        if (local.getNivelRestricao() == NivelRestricao.BAIXO) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new AcessoResponseDTO("NEGADO", "Este local exige cartão NFC.", null));
+        }
+
         Optional<Pessoa> pessoaOpt = pessoaRepository.findByNome(nome.trim());
         if (pessoaOpt.isEmpty()) {
             resetarEstadoLocal(local);
@@ -93,6 +113,18 @@ public class AcessoService {
 
         Pessoa pessoaRosto = pessoaOpt.get();
 
+        // Nível MÉDIO: Acesso direto apenas com Facial
+        if (local.getNivelRestricao() == NivelRestricao.MEDIO) {
+            Optional<ResponseEntity<AcessoResponseDTO>> erro = validarPessoaELocal(pessoaRosto, local);
+            if (erro.isPresent()) return erro.get();
+
+            resetarEstadoLocal(local);
+            Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_ROSTO, pessoaRosto, local);
+            acessoRepository.save(sucesso);
+            return ResponseEntity.ok(new AcessoResponseDTO("PERMITIDO", "Acesso liberado via biometria facial.", pessoaRosto.getNome()));
+        }
+
+        // Nível ALTO: Lógica de 2FA (Requer passagem de cartão anterior)
         if (!"WAITING_FACE".equals(local.getPendingAuthenticationState())) {
             registrarFalha(pessoaRosto, local, TipoAcesso.NEGADO_FALHA_DETECCAO_ROSTO);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new AcessoResponseDTO("NEGADO", "Passe o cartão primeiro.", null));
@@ -115,7 +147,7 @@ public class AcessoService {
         Acesso sucesso = new Acesso(TipoAcesso.PERMITIDO_2FA, pessoaRosto, local);
         acessoRepository.save(sucesso);
 
-        return ResponseEntity.ok(new AcessoResponseDTO("PERMITIDO", null, pessoaRosto.getNome()));
+        return ResponseEntity.ok(new AcessoResponseDTO("PERMITIDO", "Acesso 2FA liberado.", pessoaRosto.getNome()));
     }
 
     public ResponseEntity<Map<String, String>> vincularPessoaAoLocal(Long pessoaId, Long localId) {

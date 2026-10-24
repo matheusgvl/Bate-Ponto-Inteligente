@@ -6,7 +6,7 @@ import os
 PORTA_SERIAL = "COM3"
 BAUD_RATE = 9600
 
-LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
+LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 3))
 
 SPRING_API_URL = "http://localhost:8080/api/acesso/registrar/cartao"
 

@@ -38,42 +38,42 @@ services:
       - app-network
     restart: unless-stopped
 
-  face-recognition:
-    build:
-      context: ./vc-and-nfc
-      dockerfile: vc/Dockerfile
-    container_name: bate-ponto-face
-    ports:
-      - "5000:5000"
-    environment:
-      SPRING_BOOT_API_URL: http://spring-app:8080/api
-      PONTO_LOCAL_ID: ${PONTO_LOCAL_ID:-1}
-    volumes:
-      - /dev/video0:/dev/video0
-    devices:
-      - /dev/video0:/dev/video0
-    privileged: true
-    depends_on:
-      - spring-app
-    networks:
-      - app-network
-    restart: unless-stopped
+#  face-recognition:
+#    build:
+#      context: ./vc-and-nfc
+#      dockerfile: vc/Dockerfile
+#    container_name: bate-ponto-face
+#    ports:
+#      - "5000:5000"
+#    environment:
+#      SPRING_BOOT_API_URL: http://spring-app:8080/api
+#      PONTO_LOCAL_ID: ${PONTO_LOCAL_ID:-1}
+#    volumes:
+#      - /dev/video0:/dev/video0
+#    devices:
+#      - /dev/video0:/dev/video0
+#    privileged: true
+#    depends_on:
+#      - spring-app
+#    networks:
+#      - app-network
+#    restart: unless-stopped
 
-  arduino-nfc:
-    build:
-      context: ./arduino
-      dockerfile: Dockerfile
-    container_name: bate-ponto-nfc
-    environment:
-      SPRING_BOOT_API_URL: http://spring-app:8080/api
-    devices:
-      - ${ARDUINO_PORT:-/dev/ttyUSB0}:${ARDUINO_PORT:-/dev/ttyUSB0}
-    privileged: true
-    depends_on:
-      - spring-app
-    networks:
-      - app-network
-    restart: unless-stopped
+#  arduino-nfc:
+#    build:
+#      context: ./arduino
+#      dockerfile: Dockerfile
+#    container_name: bate-ponto-nfc
+#    environment:
+#      SPRING_BOOT_API_URL: http://spring-app:8080/api
+#    devices:
+#      - ${ARDUINO_PORT:-/dev/ttyUSB0}:${ARDUINO_PORT:-/dev/ttyUSB0}
+#    privileged: true
+#    depends_on:
+#      - spring-app
+#    networks:
+#      - app-network
+#    restart: unless-stopped
 
 volumes:
   mysql_data:

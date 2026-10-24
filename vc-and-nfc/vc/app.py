@@ -19,13 +19,28 @@ capture_state = {
     "encoding": None
 }
 
-video_capture = cv2.VideoCapture(0)
+def iniciar_camera_nativa():
+    print("[INFO] Procurando câmera nativa ativa...")
+    for i in range(5):
+        cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+        if cap.isOpened():
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            ret, frame = cap.read()
+            if ret and frame is not None and frame.size > 0:
+                print(f"[INFO] Câmera nativa conectada com sucesso no índice {i}.")
+                return cap
+        cap.release()
+    raise Exception("[ERRO CRÍTICO] Nenhuma câmera física detectada no notebook.")
+
+video_capture = iniciar_camera_nativa()
 running = True
 registration_id = None
 data_lock = threading.Lock()
 
 SPRING_BOOT_API_URL = "http://localhost:8080/api"
-LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 1))
+LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 3))
 
 def sync_faces_from_spring():
     global known_face_names, known_face_encodings
@@ -63,16 +78,33 @@ def video_processing_thread():
 
     while running:
         ret, frame = video_capture.read()
-        if not ret:
-            print("[ERRO] Falha na câmera.")
-            time.sleep(1)
+        
+        if not ret or frame is None or frame.size == 0:
+            time.sleep(0.1)
             continue
 
-        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-        rgb = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+        # 1. Reduz o frame para 1/4 (25%) - Tamanho ideal para a IA detetar rápido e sem lag
+        detection_scale = 0.5
+        small_frame = cv2.resize(frame, (0, 0), fx=detection_scale, fy=detection_scale,
+                                 interpolation=cv2.INTER_AREA)
+        
+        # 2. O dlib usado pelo face_recognition exige RGB/gray em uint8.
+        # Algumas webcams/drivers entregam outro dtype, então normalizamos aqui.
+        if small_frame.dtype != np.uint8:
+            if np.issubdtype(small_frame.dtype, np.floating):
+                small_frame = np.clip(small_frame, 0, 255).astype(np.uint8)
+            else:
+                small_frame = cv2.convertScaleAbs(small_frame)
+        rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+        rgb_small_frame = np.ascontiguousarray(rgb_small_frame, dtype=np.uint8)
 
-        faces = face_recognition.face_locations(rgb)
-        encodings = face_recognition.face_encodings(rgb, faces)
+        try:
+            faces = face_recognition.face_locations(rgb_small_frame)
+            encodings = face_recognition.face_encodings(rgb_small_frame, faces)
+        except Exception as e:
+            print(f"[ERRO IA] Falha no processamento: {e}")
+            faces = []
+            encodings = []
 
         with data_lock:
             for (top, right, bottom, left), face_encoding in zip(faces, encodings):
@@ -81,9 +113,10 @@ def video_processing_thread():
                 if len(known_face_encodings) > 0:
                     matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
                     face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-                    best_match_index = np.argmin(face_distances)
-                    if matches[best_match_index]:
-                        name = known_face_names[best_match_index]
+                    if len(face_distances) > 0:
+                        best_match_index = np.argmin(face_distances)
+                        if matches[best_match_index]:
+                            name = known_face_names[best_match_index]
 
                 if name != "Desconhecido":
                     now = time.time()
@@ -98,21 +131,25 @@ def video_processing_thread():
 
                 elif name == "Desconhecido" and registration_id is not None:
                     print(f"[CADASTRO] Rosto capturado! Guardando na memória...")
-
-                    encoding_list = face_encoding.tolist()
-
                     capture_state = {
                         "status": "success",
                         "message": "Rosto capturado com sucesso!",
-                        "encoding": encoding_list
+                        "encoding": face_encoding.tolist()
                     }
-
                     registration_id = None
 
-                top *= 4
-                right *= 4
-                bottom *= 4
-                left *= 4
+                # 3. Multiplica as coordenadas por 4 para o quadrado voltar ao tamanho real do vídeo
+                scale_x = frame.shape[1] / small_frame.shape[1]
+                scale_y = frame.shape[0] / small_frame.shape[0]
+                top = int(round(top * scale_y))
+                right = int(round(right * scale_x))
+                bottom = int(round(bottom * scale_y))
+                left = int(round(left * scale_x))
+                left = max(0, min(left, frame.shape[1] - 1))
+                right = max(left + 1, min(right, frame.shape[1]))
+                top = max(0, min(top, frame.shape[0] - 1))
+                bottom = max(top + 1, min(bottom, frame.shape[0]))
+
                 color = (0, 255, 0) if name != "Desconhecido" else (0, 0, 255)
                 cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
                 cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
@@ -172,8 +209,8 @@ if __name__ == "__main__":
     print("[INIT] Iniciando serviço...")
     sync_faces_from_spring()
 
-    cam_thread = threading.Thread(target=video_processing_thread)
-    cam_thread.daemon = True
-    cam_thread.start()
+    flask_thread = threading.Thread(target=lambda: app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False))
+    flask_thread.daemon = True
+    flask_thread.start()
 
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    video_processing_thread()

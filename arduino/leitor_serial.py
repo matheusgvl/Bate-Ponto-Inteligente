@@ -4,8 +4,8 @@ import time
 import re
 
 PORTA = "COM3"
-BAUDRATE = 115200                
-TIMEOUT = 1                      
+BAUDRATE = 115200
+TIMEOUT = 1
 
 
 uid_pattern = re.compile(r"UID \(Identificador Unico\):\s*([0-9A-Fa-f]+)")
@@ -14,7 +14,7 @@ def main():
     try:
         ser = serial.Serial(PORTA, BAUDRATE, timeout=TIMEOUT)
         print(f"Conectado em {PORTA} @ {BAUDRATE}bps. Aguardando dados...\n")
-        time.sleep(2)  
+        time.sleep(2)
     except Exception as e:
         print(f"Erro ao abrir porta {PORTA}: {e}")
         return
