@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.dibpt.patepontointeligenteweb.Entity.Pessoa;
 import org.dibpt.patepontointeligenteweb.repository.PessoaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.dibpt.patepontointeligenteweb.Entity.ENUM.FuncaoPessoa;
 import java.time.LocalDate;
@@ -23,6 +24,9 @@ public class PessoaService {
     private final PessoaRepository pessoaRepository;
     private final AcessoService acessoService;
     private final RestTemplate restTemplate;
+
+    @Value("${face.api.url:http://127.0.0.1:5000}")
+    private String faceApiUrl;
 
     @Autowired
     public PessoaService(PessoaRepository pessoaRepository,
@@ -41,7 +45,7 @@ public class PessoaService {
         request.put("id", pessoa.getId());
         request.put("nome", pessoa.getNome());
 
-        String pythonApiUrl = "http://localhost:5000/register";
+        String pythonApiUrl = faceApiUrl + "/register";
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(pythonApiUrl, request, String.class);
@@ -255,7 +259,7 @@ public class PessoaService {
     }
 
     public Map<String, Object> verificarStatusCaptura() {
-        String pythonApiUrl = "http://localhost:5000/face/status";
+        String pythonApiUrl = faceApiUrl + "/face/status";
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(pythonApiUrl, Map.class);
             return response.getBody();
@@ -300,7 +304,7 @@ public class PessoaService {
         request.put("nome", nome);
         request.put("action", "register");
 
-        String pythonApiUrl = "http://localhost:5000/face/capture";
+        String pythonApiUrl = faceApiUrl + "/face/capture";
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(pythonApiUrl, request, Map.class);
@@ -316,7 +320,7 @@ public class PessoaService {
     }
 
     public Map<String, Object> pararCapturaRosto() throws Exception {
-        String pythonApiUrl = "http://localhost:5000/face/stop";
+        String pythonApiUrl = faceApiUrl + "/face/stop";
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(pythonApiUrl, null, Map.class);

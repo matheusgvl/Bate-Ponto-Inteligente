@@ -39,14 +39,14 @@ running = True
 registration_id = None
 data_lock = threading.Lock()
 
-SPRING_BOOT_API_URL = "http://localhost:8080/api"
+SPRING_BOOT_API_URL = os.getenv("SPRING_BOOT_API_URL", "http://127.0.0.1:8082/api").rstrip("/")
 LOCAL_ID = int(os.getenv("PONTO_LOCAL_ID", 3))
 
 def sync_faces_from_spring():
     global known_face_names, known_face_encodings
     print("[INFO] Sincronizando rostos com o backend Spring Boot...")
     try:
-        response = requests.get(f"{SPRING_BOOT_API_URL}/person/faces")
+        response = requests.get(f"{SPRING_BOOT_API_URL}/person/faces", timeout=5)
 
         if response.status_code == 200:
             data = response.json()
@@ -69,7 +69,7 @@ def sync_faces_from_spring():
         else:
             print(f"[ERRO] Falha ao buscar rostos. Status: {response.status_code}")
 
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.RequestException:
         print("[ERRO] Não foi possível conectar ao backend Spring Boot.")
 
 def video_processing_thread():
@@ -78,7 +78,7 @@ def video_processing_thread():
 
     while running:
         ret, frame = video_capture.read()
-        
+
         if not ret or frame is None or frame.size == 0:
             time.sleep(0.1)
             continue
@@ -87,7 +87,7 @@ def video_processing_thread():
         detection_scale = 0.5
         small_frame = cv2.resize(frame, (0, 0), fx=detection_scale, fy=detection_scale,
                                  interpolation=cv2.INTER_AREA)
-        
+
         # 2. O dlib usado pelo face_recognition exige RGB/gray em uint8.
         # Algumas webcams/drivers entregam outro dtype, então normalizamos aqui.
         if small_frame.dtype != np.uint8:
@@ -101,12 +101,50 @@ def video_processing_thread():
         try:
             faces = face_recognition.face_locations(rgb_small_frame)
             encodings = face_recognition.face_encodings(rgb_small_frame, faces)
+            print(
+    f"[DEBUG] Faces detectadas: {len(faces)} | "
+    f"Encodings gerados: {len(encodings)} | "
+    f"Cadastro ativo: {registration_id is not None}",
+    flush=True
+)
+
         except Exception as e:
             print(f"[ERRO IA] Falha no processamento: {e}")
+            with data_lock:
+                if capture_state["status"] == "capturing":
+                    capture_state = {
+                        "status": "error",
+                        "message": f"Falha no processamento facial: {e}",
+                        "encoding": None
+                    }
+                    registration_id = None
             faces = []
             encodings = []
 
         with data_lock:
+            print(
+                f"[DIAGNOSTICO] "
+                f"faces={len(faces)} | "
+                f"encodings={len(encodings)} | "
+                f"registration_id={registration_id} | "
+                f"status={capture_state['status']}",
+                flush=True
+            )
+            # Finaliza o cadastro antes de qualquer chamada de reconhecimento ao backend.
+            if registration_id is not None and capture_state["status"] == "capturing":
+                if len(faces) == 1 and len(encodings) == 1:
+                    capture_state = {
+                        "status": "success",
+                        "message": "Rosto capturado com sucesso!",
+                        "encoding": encodings[0].tolist()
+                    }
+                    registration_id = None
+                    print("[SUCESSO] Biometria facial capturada!", flush=True)
+                elif len(faces) > 1:
+                    capture_state["message"] = "Posicione apenas uma pessoa em frente à câmera."
+                else:
+                    capture_state["message"] = "Aguardando rosto. Olhe para a câmera em um local iluminado."
+
             for (top, right, bottom, left), face_encoding in zip(faces, encodings):
                 name = "Desconhecido"
 
@@ -124,19 +162,10 @@ def video_processing_thread():
                         print(f"[RECONHECIMENTO] {name} detectado! Enviando para o Spring.")
                         try:
                             payload = {"nome": name, "localId": LOCAL_ID}
-                            requests.post(f"{SPRING_BOOT_API_URL}/acesso/registrar/rosto", json=payload)
+                            requests.post(f"{SPRING_BOOT_API_URL}/acesso/registrar/rosto", json=payload, timeout=5)
                             last_recognition_time[name] = now
                         except:
                             pass
-
-                elif name == "Desconhecido" and registration_id is not None:
-                    print(f"[CADASTRO] Rosto capturado! Guardando na memória...")
-                    capture_state = {
-                        "status": "success",
-                        "message": "Rosto capturado com sucesso!",
-                        "encoding": face_encoding.tolist()
-                    }
-                    registration_id = None
 
                 # 3. Multiplica as coordenadas por 4 para o quadrado voltar ao tamanho real do vídeo
                 scale_x = frame.shape[1] / small_frame.shape[1]
@@ -177,9 +206,9 @@ def start_face_capture():
     global registration_id, capture_state
     data = request.get_json()
 
-    capture_state = {"status": "capturing", "message": "Aguardando rosto...", "encoding": None}
-
-    registration_id = 123456
+    with data_lock:
+        capture_state = {"status": "capturing", "message": "Aguardando rosto...", "encoding": None}
+        registration_id = 123456
 
     print(f"[API] Iniciando captura para: {data.get('nome')}")
     return jsonify({"mensagem": "Captura iniciada", "status": "capturing"}), 200
@@ -187,13 +216,16 @@ def start_face_capture():
 @app.route("/face/status", methods=["GET"])
 def get_capture_status():
     global capture_state
-    return jsonify(capture_state), 200
+    with data_lock:
+        state = dict(capture_state)
+    return jsonify(state), 200
 
 @app.route("/face/stop", methods=["POST"])
 def stop_face_capture():
     global registration_id, capture_state
-    registration_id = None
-    capture_state = {"status": "idle", "message": "Cancelado", "encoding": None}
+    with data_lock:
+        registration_id = None
+        capture_state = {"status": "idle", "message": "Cancelado", "encoding": None}
     return jsonify({"mensagem": "Parado"}), 200
 
 @app.route("/sync", methods=["POST"])

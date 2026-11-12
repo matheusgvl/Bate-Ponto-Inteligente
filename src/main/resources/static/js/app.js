@@ -784,7 +784,7 @@ async function captureFaceData(nome) {
                 else if (statusData.status === 'error') {
                     clearInterval(checkInterval);
                     clearTimeout(timeoutId);
-                    showModal('Erro', 'O sistema não conseguiu capturar o rosto.', 'fas fa-times', [{text: 'Fechar', action: closeModal}]);
+                    showModal('Erro', statusData.message || 'O sistema não conseguiu capturar o rosto.', 'fas fa-times', [{text: 'Fechar', action: closeModal}]);
                 }
             } catch (e) {
                 console.error("Erro no polling:", e);
