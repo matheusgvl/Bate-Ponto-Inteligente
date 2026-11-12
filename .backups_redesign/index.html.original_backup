@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Acesso</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div class="login-container" id="loginContainer">
+            <div class="login-card">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h1>Sistema de Controle de Acesso</h1>
+                <p class="subtitle">Painel do Supervisor</p>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user"></i> Usuário
+                        </label>
+                        <input type="text" id="username" placeholder="Digite seu usuário" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-lock"></i> Senha
+                        </label>
+                        <input type="password" id="password" placeholder="Digite sua senha" required>
+                    </div>
+                    
+                    <button type="submit" class="login-btn" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Entrar no Sistema
+                    </button>
+                    
+                    <div id="errorMessage" class="error-message" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Controle de Acesso</span>
+                    </div>
+                    <button class="close-sidebar" id="closeSidebar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <div class="nav-item-dropdown">
+                        <a href="#" class="nav-item nav-item-parent" id="pessoaMenuItem">
+                            <i class="fas fa-users"></i>
+                            <span>Pessoa</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <div class="nav-submenu" id="pessoaSubmenu">
+                            <a href="#" class="nav-subitem" data-section="cadastrar-pessoas">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Cadastrar</span>
+                            </a>
+                            <a href="#" class="nav-subitem" data-section="listar-pessoas">
+                                <i class="fas fa-list"></i>
+                                <span>Listar</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="nav-item-dropdown">
+                        <a href="#" class="nav-item nav-item-parent" id="localMenuItem">
+                            <i class="fas fa-building"></i>
+                            <span>Local</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <div class="nav-submenu" id="localSubmenu">
+                            <a href="#" class="nav-subitem" data-section="cadastrar-local">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Cadastrar</span>
+                            </a>
+                            <a href="#" class="nav-subitem" data-section="listar-locais">
+                                <i class="fas fa-list"></i>
+                                <span>Listar</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="nav-item-dropdown">
+                        <a href="#" class="nav-item nav-item-parent" id="logAcessoMenuItem">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Log de Acesso</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <div class="nav-submenu" id="logAcessoSubmenu">
+                            <a href="#" class="nav-subitem" data-section="visualizar-logs">
+                                <i class="fas fa-eye"></i>
+                                <span>Visualizar Logs</span>
+                            </a>
+                            <a href="#" class="nav-subitem" data-section="relatorio-acessos">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Relatório de Acessos</span>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+                
+                <div class="sidebar-footer">
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name" id="sidebarUserName">Admin</span>
+                            <span class="user-role">Supervisor</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+            <div class="modal-overlay" id="modalOverlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <div class="modal-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="modal-title" id="modalTitle">Cancelar Cadastro</h3>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <p class="modal-message" id="modalMessage">
+                            Deseja cancelar o cadastro? Todos os dados serão perdidos.
+                        </p>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="modal-btn modal-btn-secondary" id="modalCancel">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="modal-btn modal-btn-primary" id="modalConfirm">
+                            <i class="fas fa-check"></i> Confirmar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Controle de Acesso</span>
+                    </div>
+                    <div class="current-time">
+                        <div class="time" id="currentTime">--:--:--</div>
+                        <div class="date" id="currentDate">-- de --, ----</div>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="supervisor-info">
+                        <div class="supervisor-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="supervisor-details">
+                            <span class="supervisor-name" id="supervisorName">Admin</span>
+                            <span class="supervisor-role">Supervisor de Segurança</span>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </header>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #667eea;">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-acessos-hoje">0</div>
+                        <div class="stat-label">Acessos Hoje</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #48bb78;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-pessoas-ativas">0</div>
+                        <div class="stat-label">Pessoas Ativas</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #f56565;">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-acessos-negados">0</div>
+                        <div class="stat-label">Acessos Negados</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #ed8936;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-alertas-criticos">0</div>
+                        <div class="stat-label">Alerta</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cadastro-pessoas-panel" id="cadastroPessoasPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-user-plus"></i> Cadastrar Nova Pessoa</h2>
+                    <p class="panel-subtitle">Preencha os dados da pessoa para cadastro no sistema</p>
+                </div>
+                
+                <div class="cadastro-form-container">
+                    <form id="cadastroPessoaForm" class="cadastro-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nome">
+                                    <i class="fas fa-user"></i> Nome Completo
+                                </label>
+                                <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cpf">
+                                    <i class="fas fa-id-card"></i> CPF
+                                </label>
+                                <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rg">
+                                    <i class="fas fa-address-card"></i> RG
+                                </label>
+                                <input type="text" id="rg" name="rg" placeholder="00.000.000-0" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dataNascimento">
+                                    <i class="fas fa-calendar-alt"></i> Data de Nascimento
+                                </label>
+                                <input type="date" id="dataNascimento" name="dataNascimento" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="funcao">
+                                    <i class="fas fa-briefcase"></i> Função
+                                </label>
+                                <select id="funcao" name="funcao" required>
+                                    <option value="">Selecione a função</option>
+                                    <option value="funcionario">Funcionário</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="gerente">Gerente</option>
+                                    <option value="diretor">Diretor</option>
+                                    <option value="terceirizado">Terceirizado</option>
+                                    <option value="visitante">Visitante</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="btnCancelar">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            
+                            <button type="button" class="btn-card" id="btnCadastrarCartao">
+                                <i class="fas fa-credit-card"></i> Cadastrar Cartão
+                            </button>
+                            
+                            <button type="button" class="btn-face" id="btnCadastrarRosto">
+                                <i class="fas fa-user-check"></i> Cadastrar Rosto
+                            </button>
+                            
+                            <button type="submit" class="btn-primary" id="btnSalvar">
+                                <i class="fas fa-save"></i> Salvar Pessoa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="cadastro-info">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <h4>Informações Importantes</h4>
+                            <ul>
+                                <li>Todos os campos são obrigatórios</li>
+                                <li>O CPF deve ser válido e único no sistema</li>
+                                <li>Após salvar, use "Cadastrar Cartão" para vincular um cartão de acesso</li>
+                                <li>Use "Cadastrar Rosto" para registrar reconhecimento facial</li>
+                                <li>A função determina as permissões de acesso da pessoa</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="listagem-pessoas-panel" id="listagemPessoasPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-list"></i> Pessoas Cadastradas</h2>
+                    <p class="panel-subtitle">Visualize e gerencie todas as pessoas cadastradas no sistema</p>
+                </div>
+
+                <div class="listagem-container">
+                    <div class="listagem-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchPessoa" placeholder="Buscar por nome, CPF ou função...">
+                        </div>
+                        <button class="btn-primary" onclick="carregarListaPessoas()">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+
+                    <div class="pessoas-grid" id="pessoasGrid">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando pessoas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cadastro-local-panel" id="cadastroLocalPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-plus-circle"></i> Cadastrar Novo Local</h2>
+                    <p class="panel-subtitle">Preencha os dados do local para cadastro no sistema</p>
+                </div>
+                
+                <div class="cadastro-form-container">
+                    <form id="cadastroLocalForm" class="cadastro-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nomeLocal">
+                                    <i class="fas fa-building"></i> Nome do Local
+                                </label>
+                                <input type="text" id="nomeLocal" name="nome" placeholder="Digite o nome do local" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="descricaoLocal">
+                                    <i class="fas fa-align-left"></i> Descrição
+                                </label>
+                                <textarea id="descricaoLocal" name="descricao" placeholder="Digite uma descrição para o local" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nivelRestricao">
+                                    <i class="fas fa-shield-alt"></i> Nível de Restrição
+                                </label>
+                                <select id="nivelRestricao" name="nivelRestricao" required>
+                                    <option value="">Selecione o nível</option>
+                                    <option value="BAIXO">Baixo</option>
+                                    <option value="MEDIO">Médio</option>
+                                    <option value="ALTO">Alto</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="capacidadeMaxima">
+                                    <i class="fas fa-users"></i> Capacidade Máxima
+                                </label>
+                                <input type="number" id="capacidadeMaxima" name="capacidadeMaxima" placeholder="Ex: 10" min="1" max="1000" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group form-group-full">
+                                <label for="funcoesAutorizadas">
+                                    <i class="fas fa-user-tag"></i> Funções Autorizadas
+                                </label>
+                                <div class="checkbox-group" id="funcoesAutorizadas">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="funcao_FUNCIONARIO" name="funcoesAutorizadas" value="FUNCIONARIO">
+                                        <label for="funcao_FUNCIONARIO">Funcionário</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="funcao_SUPERVISOR" name="funcoesAutorizadas" value="SUPERVISOR">
+                                        <label for="funcao_SUPERVISOR">Supervisor</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="funcao_GERENTE" name="funcoesAutorizadas" value="GERENTE">
+                                        <label for="funcao_GERENTE">Gerente</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="funcao_DIRETOR" name="funcoesAutorizadas" value="DIRETOR">
+                                        <label for="funcao_DIRETOR">Diretor</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="funcao_TERCEIRIZADO" name="funcoesAutorizadas" value="TERCEIRIZADO">
+                                        <label for="funcao_TERCEIRIZADO">Terceirizado</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="funcao_VISITANTE" name="funcoesAutorizadas" value="VISITANTE">
+                                        <label for="funcao_VISITANTE">Visitante</label>
+                                    </div>
+                                </div>
+                                <small class="form-help">Selecione quais funções poderão acessar este local</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="btnCancelarLocal">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            
+                            <button type="submit" class="btn-primary" id="btnSalvarLocal">
+                                <i class="fas fa-save"></i> Salvar Local
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="cadastro-info">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <h4>Informações Importantes</h4>
+                            <ul>
+                                <li>Todos os campos são obrigatórios</li>
+                                <li>O nome deve ser único no sistema</li>
+                                <li>A descrição ajuda a identificar o local</li>
+                                <li>O nível de restrição define a segurança do acesso</li>
+                                <li>A capacidade máxima controla o limite de pessoas</li>
+                                <li>Selecione as funções autorizadas para controlar o acesso</li>
+                                <li>Após salvar, você pode gerenciar permissões individuais</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="listagem-locais-panel" id="listagemLocaisPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-list"></i> Locais Cadastrados</h2>
+                    <p class="panel-subtitle">Visualize e gerencie todos os locais cadastrados no sistema</p>
+                </div>
+
+                <div class="listagem-container">
+                    <div class="listagem-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchLocal" placeholder="Buscar por nome ou descrição...">
+                        </div>
+                        <button class="btn-primary" onclick="carregarListaLocais()">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+                    
+                    <div class="locais-grid" id="locaisGrid">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando locais...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="listagem-pessoas-panel" id="listagemPessoasPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-list"></i> Pessoas Cadastradas</h2>
+                    <p class="panel-subtitle">Visualize e gerencie todas as pessoas cadastradas no sistema</p>
+                </div>
+                
+                <div class="listagem-container">
+                    <div class="listagem-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchPessoa" placeholder="Buscar por nome, CPF ou função...">
+                        </div>
+                        <button class="btn-primary" onclick="carregarListaPessoas()">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
+                    </div>
+                    
+                    <div class="pessoas-grid" id="pessoasGrid">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando pessoas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualizar-logs-panel" id="visualizarLogsPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-eye"></i> Visualizar Logs de Acesso</h2>
+                    <p class="panel-subtitle">Histórico completo de todos os acessos registrados no sistema</p>
+                </div>
+                
+                <div class="logs-container">
+                    <div class="logs-header">
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label for="filtroData">
+                                    <i class="fas fa-calendar"></i> Data
+                                </label>
+                                <input type="date" id="filtroData" name="filtroData">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filtroPessoa">
+                                    <i class="fas fa-user"></i> Pessoa
+                                </label>
+                                <select id="filtroPessoa" name="filtroPessoa">
+                                    <option value="">Todas as pessoas</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filtroLocal">
+                                    <i class="fas fa-building"></i> Local
+                                </label>
+                                <select id="filtroLocal" name="filtroLocal">
+                                    <option value="">Todos os locais</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filtroTipoAcesso">
+                                    <i class="fas fa-filter"></i> Tipo de Acesso
+                                </label>
+                                <select id="filtroTipoAcesso" name="filtroTipoAcesso">
+                                    <option value="">Todos</option>
+                                    <option value="PERMITIDO">Permitido</option>
+                                    <option value="NEGADO">Negado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="logs-actions">
+                            <button class="btn-secondary" onclick="limparFiltros()">
+                                <i class="fas fa-eraser"></i> Limpar Filtros
+                            </button>
+                            <button class="btn-primary" onclick="carregarLogs()">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="logs-table-container">
+                        <table class="logs-table" id="logsTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-clock"></i> Data/Hora</th>
+                                    <th><i class="fas fa-user"></i> Pessoa</th>
+                                    <th><i class="fas fa-building"></i> Local</th>
+                                    <th><i class="fas fa-shield-alt"></i> Tipo de Acesso</th>
+                                    <th><i class="fas fa-info-circle"></i> Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <tr class="loading-row">
+                                    <td colspan="5">
+                                        <i class="fas fa-spinner fa-spin"></i> Carregando logs...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="logs-pagination">
+                        <div class="pagination-info">
+                            <span id="paginationInfo">Mostrando 0 de 0 registros</span>
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="btn-pagination" id="btnPrevPage" onclick="paginaAnterior()">
+                                <i class="fas fa-chevron-left"></i> Anterior
+                            </button>
+                            <span class="page-numbers" id="pageNumbers">1</span>
+                            <button class="btn-pagination" id="btnNextPage" onclick="proximaPagina()">
+                                Próxima <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relatorio-acessos-panel" id="relatorioAcessosPanel" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-chart-bar"></i> Relatório de Acessos</h2>
+                    <p class="panel-subtitle">Análises e estatísticas dos acessos registrados</p>
+                </div>
+                
+                <div class="relatorio-container">
+                    <div class="relatorio-header">
+                        <div class="period-selector">
+                            <label for="periodoRelatorio">
+                                <i class="fas fa-calendar-alt"></i> Período
+                            </label>
+                            <select id="periodoRelatorio" name="periodoRelatorio" onchange="gerarRelatorio()">
+                                <option value="hoje">Hoje</option>
+                                <option value="ultima_semana">Última Semana</option>
+                                <option value="ultimo_mes" selected>Último Mês</option>
+                                <option value="ultimo_trimestre">Último Trimestre</option>
+                                <option value="personalizado">Período Personalizado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="periodo-personalizado" id="periodoPersonalizado" style="display: none;">
+                            <input type="date" id="dataInicio" name="dataInicio">
+                            <span>até</span>
+                            <input type="date" id="dataFim" name="dataFim">
+                        </div>
+                    </div>
+                    
+                    <div class="stats-summary">
+                        <div class="summary-card">
+                            <div class="summary-icon" style="color: #48bb78;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-number" id="totalAcessosPermitidos">0</div>
+                                <div class="summary-label">Acessos Permitidos</div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-icon" style="color: #f56565;">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-number" id="totalAcessosNegados">0</div>
+                                <div class="summary-label">Acessos Negados</div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-icon" style="color: #667eea;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-number" id="totalPessoasUnicas">0</div>
+                                <div class="summary-label">Pessoas Únicas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-icon" style="color: #ed8936;">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-number" id="totalLocaisAcessados">0</div>
+                                <div class="summary-label">Locais Acessados</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="top-lists">
+                        <div class="top-list-card">
+                            <h3><i class="fas fa-trophy"></i> Pessoas Mais Ativas</h3>
+                            <div class="top-list" id="topPessoas">
+                                <div class="loading-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Carregando dados...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="top-list-card">
+                            <h3><i class="fas fa-building"></i> Locais Mais Acessados</h3>
+                            <div class="top-list" id="topLocais">
+                                <div class="loading-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Carregando dados...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-main" id="dashboardMain">
+                <div class="dashboard-section areas-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-building"></i> Áreas </h3>
+                        <span class="section-subtitle">0 áreas monitoradas</span>
+                    </div>
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h4>Nenhuma área configurada</h4>
+                        <p>Sistema novo sem dados cadastrados</p>
+                    </div>
+                </div>
+                
+                <div class="dashboard-section access-feed-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-list"></i> Acessos em Tempo Real</h3>
+                        <span class="section-subtitle">
+                            <span class="status-live">
+                                <i class="fas fa-circle"></i> AO VIVO
+                            </span>
+                        </span>
+                    </div>
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <h4>Nenhum acesso registrado</h4>
+                        <p>Sistema novo sem histórico de acessos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="system-footer">
+                <div class="status-indicator">
+                    <i class="fas fa-circle" style="color: #28a745;"></i>
+                    <span>Sistema Operacional</span>
+                </div>
+                <div class="version-info">
+                    Versão 1.0
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editLocalModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="editLocalModalTitle"><i class="fas fa-edit"></i> Editar Local</h3>
+                <button class="modal-close" onclick="closeEditLocalModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editLocalForm" class="cadastro-form">
+                    <input type="hidden" id="editLocalId" name="id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editNomeLocal">
+                                <i class="fas fa-building"></i> Nome do Local
+                            </label>
+                            <input type="text" id="editNomeLocal" name="nome" placeholder="Digite o nome do local" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group form-group-full">
+                            <label for="editDescricaoLocal">
+                                <i class="fas fa-align-left"></i> Descrição
+                            </label>
+                            <textarea id="editDescricaoLocal" name="descricao" placeholder="Digite uma descrição para o local" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editNivelRestricao">
+                                <i class="fas fa-shield-alt"></i> Nível de Restrição
+                            </label>
+                            <select id="editNivelRestricao" name="nivelRestricao" required>
+                                <option value="">Selecione o nível</option>
+                                <option value="BAIXO">Baixo</option>
+                                <option value="MEDIO">Médio</option>
+                                <option value="ALTO">Alto</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editCapacidadeMaxima">
+                                <i class="fas fa-users"></i> Capacidade Máxima
+                            </label>
+                            <input type="number" id="editCapacidadeMaxima" name="capacidadeMaxima" placeholder="Ex: 10" min="1" max="1000" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group form-group-full">
+                            <label for="editFuncoesAutorizadas">
+                                <i class="fas fa-user-tag"></i> Funções Autorizadas
+                            </label>
+                            <div class="checkbox-group" id="editFuncoesAutorizadas">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="edit_funcao_FUNCIONARIO" name="funcoesAutorizadas" value="FUNCIONARIO">
+                                    <label for="edit_funcao_FUNCIONARIO">Funcionário</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="edit_funcao_SUPERVISOR" name="funcoesAutorizadas" value="SUPERVISOR">
+                                    <label for="edit_funcao_SUPERVISOR">Supervisor</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="edit_funcao_GERENTE" name="funcoesAutorizadas" value="GERENTE">
+                                    <label for="edit_funcao_GERENTE">Gerente</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="edit_funcao_DIRETOR" name="funcoesAutorizadas" value="DIRETOR">
+                                    <label for="edit_funcao_DIRETOR">Diretor</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="edit_funcao_TERCEIRIZADO" name="funcoesAutorizadas" value="TERCEIRIZADO">
+                                    <label for="edit_funcao_TERCEIRIZADO">Terceirizado</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="edit_funcao_VISITANTE" name="funcoesAutorizadas" value="VISITANTE">
+                                    <label for="edit_funcao_VISITANTE">Visitante</label>
+                                </div>
+                            </div>
+                            <small class="form-help">Selecione quais funções poderão acessar este local</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditLocalModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editPersonModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="editPersonModalTitle"><i class="fas fa-edit"></i> Editar Pessoa</h3>
+                <button class="modal-close" onclick="closeEditPersonModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editPersonForm" class="cadastro-form">
+                    <input type="hidden" id="editPersonId" name="id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editNomePessoa">
+                                <i class="fas fa-user"></i> Nome Completo
+                            </label>
+                            <input type="text" id="editNomePessoa" name="nome" placeholder="Digite o nome completo" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCpfPessoa">
+                                <i class="fas fa-id-card"></i> CPF
+                            </label>
+                            <input type="text" id="editCpfPessoa" name="cpf" placeholder="000.000.000-00" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editRgPessoa">
+                                <i class="fas fa-address-card"></i> RG
+                            </label>
+                            <input type="text" id="editRgPessoa" name="rg" placeholder="Digite o RG" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDataNascimento">
+                                <i class="fas fa-calendar-alt"></i> Data de Nascimento
+                            </label>
+                            <input type="date" id="editDataNascimento" name="dataNascimento" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editFuncaoPessoa">
+                                <i class="fas fa-briefcase"></i> Função
+                            </label>
+                            <select id="editFuncaoPessoa" name="funcao" required>
+                                <option value="">Selecione a função</option>
+                                <option value="GERENTE">Gerente</option>
+                                <option value="FUNCIONARIO">Funcionário</option>
+                                <option value="TERCEIRIZADO">Terceirizado</option>
+                                <option value="VISITANTE">Visitante</option>
+                                <option value="MANUTENCAO">Manutenção</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCardUIDPessoa">
+                                <i class="fas fa-credit-card"></i> Cartão NFC
+                            </label>
+                            <div class="card-input-group">
+                                <input type="text" id="editCardUIDPessoa" name="cardUID" placeholder="UID do cartão" readonly>
+                                <button type="button" id="btnAlterarCartao" class="btn-secondary">
+                                    <i class="fas fa-credit-card"></i> Alterar Cartão
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditPersonModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
